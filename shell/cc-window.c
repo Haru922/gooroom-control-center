@@ -247,6 +247,10 @@ update_list_title (CcWindow *self)
       title = _("Devices");
       break;
 
+    case CC_PANEL_LIST_SECURITIES:
+      title = _("Securities");
+      break;
+
     case CC_PANEL_LIST_MAIN:
       title = _("Settings");
       break;

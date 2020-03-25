@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <template class="CcPanelList" parent="GtkStack">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="vhomogeneous">False</property>
-    <property name="hhomogeneous">True</property>
     <property name="transition_type">slide-left-right</property>
     <child>
       <object class="GtkListBox" id="main_listbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no" />
+        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no"/>
         <child>
           <object class="GtkListBoxRow" id="devices_row">
             <property name="visible">True</property>
@@ -28,7 +28,7 @@
                     <property name="can_focus">False</property>
                     <property name="icon_name">preferences-system-devices-symbolic</property>
                     <style>
-                      <class name="sidebar-icon" />
+                      <class name="sidebar-icon"/>
                     </style>
                   </object>
                   <packing>
@@ -57,7 +57,7 @@
                     <property name="can_focus">False</property>
                     <property name="icon_name">go-next-symbolic</property>
                     <style>
-                      <class name="sidebar-icon" />
+                      <class name="sidebar-icon"/>
                     </style>
                   </object>
                   <packing>
@@ -86,7 +86,7 @@
                     <property name="can_focus">False</property>
                     <property name="icon_name">preferences-system-details-symbolic</property>
                     <style>
-                      <class name="sidebar-icon" />
+                      <class name="sidebar-icon"/>
                     </style>
                   </object>
                   <packing>
@@ -115,7 +115,65 @@
                     <property name="can_focus">False</property>
                     <property name="icon_name">go-next-symbolic</property>
                     <style>
-                      <class name="sidebar-icon" />
+                      <class name="sidebar-icon"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkListBoxRow" id="securities_row">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="border_width">12</property>
+                <property name="spacing">12</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">security-high</property>
+                    <style>
+                      <class name="sidebar-icon"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Securities</property>
+                    <property name="xalign">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">go-next-symbolic</property>
+                    <style>
+                      <class name="sidebar-icon"/>
                     </style>
                   </object>
                   <packing>
@@ -137,7 +195,7 @@
       <object class="GtkListBox" id="devices_listbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no" />
+        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no"/>
       </object>
       <packing>
         <property name="name">devices</property>
@@ -148,7 +206,7 @@
       <object class="GtkListBox" id="details_listbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no" />
+        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no"/>
       </object>
       <packing>
         <property name="name">details</property>
@@ -156,14 +214,25 @@
       </packing>
     </child>
     <child>
+      <object class="GtkListBox" id="securities_listbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <signal name="row-activated" handler="row_activated_cb" object="CcPanelList" swapped="no"/>
+      </object>
+      <packing>
+        <property name="name">securities</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkListBox" id="search_listbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <signal name="row-activated" handler="search_row_activated_cb" object="CcPanelList" swapped="no" />
+        <signal name="row-activated" handler="search_row_activated_cb" object="CcPanelList" swapped="no"/>
       </object>
       <packing>
         <property name="name">search</property>
-        <property name="position">3</property>
+        <property name="position">4</property>
       </packing>
     </child>
   </template>
@@ -187,6 +256,11 @@
           <class name="dim-label"/>
         </style>
       </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
     </child>
     <child>
       <object class="GtkLabel">
@@ -195,9 +269,14 @@
         <property name="label" translatable="yes">No results found</property>
         <attributes>
           <attribute name="weight" value="bold"/>
-          <attribute name="scale" value="1.44"/>
+          <attribute name="scale" value="1.4399999999999999"/>
         </attributes>
       </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
     </child>
     <child>
       <object class="GtkLabel">
@@ -208,6 +287,11 @@
           <class name="dim-label"/>
         </style>
       </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
     </child>
   </object>
 </interface>
