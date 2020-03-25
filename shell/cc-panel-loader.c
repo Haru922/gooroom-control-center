@@ -164,6 +164,8 @@ parse_categories (GDesktopAppInfo *app)
     retval = CC_CATEGORY_DEVICES;
   else if (g_strv_contains (const_strv (split), "X-GNOME-DetailsSettings"))
     retval = CC_CATEGORY_DETAILS;
+  else if (g_strv_contains (const_strv (split), "GOOROOM-SecuritiesSettings"))
+    retval = CC_CATEGORY_SECURITIES;
   else if (g_strv_contains (const_strv (split), "HardwareSettings"))
     retval = CC_CATEGORY_HARDWARE;
 
