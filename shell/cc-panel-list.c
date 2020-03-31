@@ -47,7 +47,7 @@ struct _CcPanelList
   GtkWidget          *devices_listbox;
   GtkWidget          *main_listbox;
   GtkWidget          *search_listbox;
-  GtkWidget          *securities_listbox;
+  GtkWidget          *security_listbox;
 
   /* When clicking on Details or Devices row, show it
    * automatically select the first panel of the list.
@@ -56,7 +56,7 @@ struct _CcPanelList
 
   GtkListBoxRow      *details_row;
   GtkListBoxRow      *devices_row;
-  GtkListBoxRow      *securities_row;
+  GtkListBoxRow      *security_row;
 
   GtkWidget          *empty_search_placeholder;
 
@@ -107,8 +107,8 @@ get_listbox_from_view (CcPanelList     *self,
     case CC_PANEL_LIST_DEVICES:
       return self->devices_listbox;
 
-    case CC_PANEL_LIST_SECURITIES:
-      return self->securities_listbox;
+    case CC_PANEL_LIST_SECURITY:
+      return self->security_listbox;
 
     case CC_PANEL_LIST_SEARCH:
       return self->search_listbox;
@@ -133,8 +133,8 @@ get_listbox_from_category (CcPanelList     *self,
       return self->details_listbox;
       break;
 
-    case CC_CATEGORY_SECURITIES:
-      return self->securities_listbox;
+    case CC_CATEGORY_SECURITY:
+      return self->security_listbox;
       break;
 
     default:
@@ -158,7 +158,7 @@ activate_row_below (CcPanelList *self,
   next_row = gtk_list_box_get_row_at_index (listbox, row_index + 1);
 
   /* Try the previous one if the current is invalid */
-  if (!next_row || next_row == self->devices_row || next_row == self->details_row || next_row == self->securities_row)
+  if (!next_row || next_row == self->devices_row || next_row == self->details_row || next_row == self->security_row)
     next_row = gtk_list_box_get_row_at_index (listbox, row_index - 1);
 
   if (next_row)
@@ -178,8 +178,8 @@ get_view_from_listbox (CcPanelList *self,
   if (listbox == self->devices_listbox)
     return CC_PANEL_LIST_DEVICES;
 
-  if (listbox == self->securities_listbox)
-    return CC_PANEL_LIST_SECURITIES;
+  if (listbox == self->security_listbox)
+    return CC_PANEL_LIST_SECURITY;
 
   return CC_PANEL_LIST_SEARCH;
 }
@@ -370,12 +370,11 @@ static const gchar * const panel_order[] = {
   "datetime",
   "user-accounts",
   "default-apps",
-  "reset-settings"
+  "reset-settings",
 
-  /* Securities page */
-  "AhnLab",
-  "ESTsoft",
-  "somansa"
+  /* Security page */
+  // TODO
+  "gooroom"
 };
 
 static guint
@@ -402,23 +401,27 @@ sort_function (GtkListBoxRow *a,
 
   self = CC_PANEL_LIST (user_data);
 
-  /* Handle the Devices and the Details rows */
-  if ((a == self->details_row && b == self->devices_row) ||
-      (a == self->details_row && b == self->securities_row) || 
-      (a == self->devices_row && b == self->serucities_row))
+  /* Handle the Devices, the Security and the Details rows */
+  if (a == self->details_row && b == self->devices_row)
     return 1;
-  if ((a == self->devices_row && b == self->details_row) ||
-      (a == self->securities_row && b == self->details_row) ||
-      (a == self->securities_row && b == self->devices_row))
+  if (a == self->details_row && b == self->security_row)
+    return 1;
+  if (a == self->security_row && b == self->devices_row)
+    return 1;
+  if (a == self->devices_row && b == self->details_row)
     return -1;
-  if (a == self->details_row || a == self->devices_row || a == self->securities_row)
+  if (a == self->devices_row && b == self->security_row)
+    return -1;
+  if (a == self->security_row && b == self->details_row)
+    return -1;
+  if (a == self->details_row || a == self->devices_row || a == self->security_row)
     return 1;
-  if (b == self->details_row || b == self->devices_row || b == self->securities_row)
+  if (b == self->details_row || b == self->devices_row || b == self->security_row)
     return -1;
 
   /*
    * We can only retrieve the data after assuring that none
-   * of the rows are Devices and Details.
+   * of the rows are Devices, Security and Details.
    */
   a_data = g_object_get_data (G_OBJECT (a), "data");
   b_data = g_object_get_data (G_OBJECT (b), "data");
@@ -494,8 +497,8 @@ header_func (GtkListBoxRow *row,
   if (!before)
     return;
 
-  /* The Details row always have the separator */
-  if (row == self->details_row)
+  /* The Security and the Details row always have the separator */
+  if (row == self->details_row || row == self->security_row)
     {
       GtkWidget *separator;
 
@@ -512,7 +515,7 @@ header_func (GtkListBoxRow *row,
       if (row == self->devices_row ||
           before == self->details_row ||
           before == self->devices_row ||
-          before == self->securities_row)
+          before == self->security_row)
         {
           return;
         }
@@ -541,7 +544,7 @@ header_func (GtkListBoxRow *row,
     }
 }
 
-// set visible details_row & devices_row
+// set visible details_row & devices_row & security_row
 static void 
 show_panel_list_row_box (GtkWidget *listbox, GtkWidget *row)
 {
@@ -585,10 +588,10 @@ row_activated_cb (GtkWidget     *listbox,
       goto out;
     }
 
-  /* Securities */
-  if (row == self->securities_row)
+  /* Security */
+  if (row == self->security_row)
     {
-      cc_panel_list_set_view (self, CC_PANEL_LIST_SECURITIES);
+      cc_panel_list_set_view (self, CC_PANEL_LIST_SECURITY);
       goto out;
     }
 
@@ -607,14 +610,14 @@ row_activated_cb (GtkWidget     *listbox,
       if (listbox != self->devices_listbox)
         gtk_list_box_unselect_all (GTK_LIST_BOX (self->devices_listbox));
       
-      if (listbox != self->securities_listbox)
-        gtk_list_box_unselect_all (GTK_LIST_BOX (self->securities_listbox));
+      if (listbox != self->security_listbox)
+        gtk_list_box_unselect_all (GTK_LIST_BOX (self->security_listbox));
     }
 
-  // visible details & devices list row box & securities list row box
+  // visible details & devices & security list row box
+  show_panel_list_row_box (self->security_listbox, self->security_row);
   show_panel_list_row_box (self->details_listbox, self->details_row);
   show_panel_list_row_box (self->devices_listbox, self->devices_row);
-  show_panel_list_row_box (self->securities_listbox, self->securities_row);
 
   /*
    * Since we're not sure that the activated row is in the
@@ -649,8 +652,8 @@ search_row_activated_cb (GtkWidget     *listbox,
     real_listbox = self->details_listbox;
   else if (data->category == CC_CATEGORY_DEVICES)
     real_listbox = self->devices_listbox;
-  else if (data->category == CC_CATEGORY_SECURITIES)
-    real_listbox = self->securities_listbox;
+  else if (data->category == CC_CATEGORY_SECURITY)
+    real_listbox = self->security_listbox;
   else
     real_listbox = self->main_listbox;
 
@@ -664,7 +667,7 @@ search_row_activated_cb (GtkWidget     *listbox,
       real_row_data = g_object_get_data (l->data, "data");
 
       /*
-       * The main listbox has the Details & Devices rows, and neither
+       * The main listbox has the Details & Devices & Security rows, and neither
        * of them contains "data", so we have to ensure we have valid
        * data before going on.
        */
@@ -821,8 +824,8 @@ cc_panel_list_class_init (CcPanelListClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, details_row);
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, devices_listbox);
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, devices_row);
-  gtk_widget_class_bind_template_child (widget_class, CcPanelList, securities_listbox);
-  gtk_widget_class_bind_template_child (widget_class, CcPanelList, securities_row);
+  gtk_widget_class_bind_template_child (widget_class, CcPanelList, security_listbox);
+  gtk_widget_class_bind_template_child (widget_class, CcPanelList, security_row);
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, empty_search_placeholder);
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, main_listbox);
   gtk_widget_class_bind_template_child (widget_class, CcPanelList, search_listbox);
@@ -855,7 +858,7 @@ cc_panel_list_init (CcPanelList *self)
                               self,
                               NULL);
 
-  gtk_list_box_set_sort_func (GTK_LIST_BOX (self->securities_listbox),
+  gtk_list_box_set_sort_func (GTK_LIST_BOX (self->security_listbox),
                               sort_function,
                               self,
                               NULL);

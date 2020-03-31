@@ -58,6 +58,7 @@ extern GType cc_sharing_panel_get_type (void);
 extern GType cc_sound_panel_get_type (void);
 extern GType cc_font_panel_get_type (void);
 extern GType cc_themes_panel_get_type (void);
+extern GType cc_gooroom_panel_get_type (void);
 #ifdef BUILD_THUNDERBOLT
 extern GType cc_bolt_panel_get_type (void);
 #endif /* BUILD_THUNDERBOLT */
@@ -94,6 +95,7 @@ static struct {
 #ifdef BUILD_BLUETOOTH
   PANEL_TYPE("bluetooth",        cc_bluetooth_panel_get_type,            NULL),
 #endif
+  PANEL_TYPE("gooroom",          cc_gooroom_panel_get_type,              NULL),
   PANEL_TYPE("font",             cc_font_panel_get_type,                 NULL),
   PANEL_TYPE("themes",           cc_themes_panel_get_type,               NULL),
   PANEL_TYPE("color",            cc_color_panel_get_type,                NULL),
@@ -156,18 +158,21 @@ parse_categories (GDesktopAppInfo *app)
 
   if (g_strv_contains (const_strv (split), "X-GNOME-ConnectivitySettings"))
     retval = CC_CATEGORY_CONNECTIVITY;
-  else if (g_strv_contains (const_strv (split), "X-GNOME-PersonalizationSettings"))
+  else if (g_strv_contains (const_strv (split), "X-GNOME-PersonalizationSettings")) 
     retval = CC_CATEGORY_PERSONALIZATION;
   else if (g_strv_contains (const_strv (split), "X-GNOME-AccountSettings"))
     retval = CC_CATEGORY_ACCOUNT;
   else if (g_strv_contains (const_strv (split), "X-GNOME-DevicesSettings"))
     retval = CC_CATEGORY_DEVICES;
-  else if (g_strv_contains (const_strv (split), "X-GNOME-DetailsSettings"))
+  else if (g_strv_contains (const_strv (split), "X-GNOME-DetailsSettings")) 
     retval = CC_CATEGORY_DETAILS;
-  else if (g_strv_contains (const_strv (split), "GOOROOM-SecuritiesSettings"))
-    retval = CC_CATEGORY_SECURITIES;
   else if (g_strv_contains (const_strv (split), "HardwareSettings"))
     retval = CC_CATEGORY_HARDWARE;
+  else if (g_strv_contains (const_strv (split), "SecuritySettings")) {
+    g_print ("Gooroom Security Settings\n");
+    retval = CC_CATEGORY_SECURITY;
+  }
+  
 
 #undef const_strv
 
