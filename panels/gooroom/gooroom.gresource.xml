@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/gnome/control-center/gooroom">
+    <file preprocess="xml-stripblanks">gooroom.ui</file>
+  </gresource>
+</gresources>
+

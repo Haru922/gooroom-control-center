@@ -116,6 +116,8 @@ pulse_mainloop_dep = dependency('libpulse-mainloop-glib', version: pulse_req_ver
 upower_glib_dep = dependency('upower-glib', version: '>= 0.99.6')
 x11_dep = dependency('x11')
 xi_dep = dependency('xi', version: '>= 1.2')
+gooroom_dep = dependency('webkit2gtk-4.0', version: '>= 2.26.0')
+hancom_dep = dependency('webkit2gtk-4.0', version: '>= 2.26.0')
 
 m_dep = cc.find_library('m')
 

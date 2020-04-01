@@ -59,6 +59,7 @@ extern GType cc_sound_panel_get_type (void);
 extern GType cc_font_panel_get_type (void);
 extern GType cc_themes_panel_get_type (void);
 extern GType cc_gooroom_panel_get_type (void);
+extern GType cc_hancom_panel_get_type (void);
 #ifdef BUILD_THUNDERBOLT
 extern GType cc_bolt_panel_get_type (void);
 #endif /* BUILD_THUNDERBOLT */
@@ -95,6 +96,7 @@ static struct {
 #ifdef BUILD_BLUETOOTH
   PANEL_TYPE("bluetooth",        cc_bluetooth_panel_get_type,            NULL),
 #endif
+  PANEL_TYPE("hancom",           cc_hancom_panel_get_type,               NULL),
   PANEL_TYPE("gooroom",          cc_gooroom_panel_get_type,              NULL),
   PANEL_TYPE("font",             cc_font_panel_get_type,                 NULL),
   PANEL_TYPE("themes",           cc_themes_panel_get_type,               NULL),
@@ -168,11 +170,8 @@ parse_categories (GDesktopAppInfo *app)
     retval = CC_CATEGORY_DETAILS;
   else if (g_strv_contains (const_strv (split), "HardwareSettings"))
     retval = CC_CATEGORY_HARDWARE;
-  else if (g_strv_contains (const_strv (split), "SecuritySettings")) {
-    g_print ("Gooroom Security Settings\n");
+  else if (g_strv_contains (const_strv (split), "SecuritySettings")) 
     retval = CC_CATEGORY_SECURITY;
-  }
-  
 
 #undef const_strv
 
@@ -195,7 +194,7 @@ cc_panel_loader_visible_from_schema (CcShellModel *model)
 
   for (gint i = 0; i < G_N_ELEMENTS (all_panels); i++)
   {
-    for (int j = 0; j < whiteList[j] != NULL; j++)
+    for (int j = 0; whiteList[j] != NULL; j++)
     {
       if (g_strcmp0(all_panels[i].name, whiteList[j]) == 0)
         cc_shell_model_set_panel_visibility (model, all_panels[i].name, CC_PANEL_VISIBLE);
@@ -265,7 +264,7 @@ ensure_panel_types (void)
     return;
 
   panel_types = g_hash_table_new (g_str_hash, g_str_equal);
-  for (i = 0; i < G_N_ELEMENTS (all_panels); i++)
+  for (i = 0; i < G_N_ELEMENTS (all_panels); i++) 
     g_hash_table_insert (panel_types, (char*)all_panels[i].name, all_panels[i].get_type);
 }
 
