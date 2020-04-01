@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Gooroom
-Comment=gooroom sample panel
+Comment=gooroom sample web view panel
 Exec=gnome-control-center gooroom
 # Translators: Do NOT translate or transliterate this text (this is an icon file name)!
 Icon=security-medium
