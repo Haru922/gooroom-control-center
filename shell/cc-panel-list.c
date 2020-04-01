@@ -402,23 +402,20 @@ sort_function (GtkListBoxRow *a,
 
   self = CC_PANEL_LIST (user_data);
 
+
   /* Handle the Devices, the Security and the Details rows */
-  if (a == self->details_row && b == self->devices_row)
-    return 1;
-  if (a == self->details_row && b == self->security_row)
-    return 1;
-  if (a == self->security_row && b == self->devices_row)
-    return 1;
-  if (a == self->devices_row && b == self->details_row)
-    return -1;
-  if (a == self->devices_row && b == self->security_row)
-    return -1;
-  if (a == self->security_row && b == self->details_row)
-    return -1;
-  if (a == self->details_row || a == self->devices_row || a == self->security_row)
-    return 1;
-  if (b == self->details_row || b == self->devices_row || b == self->security_row)
-    return -1;
+  if (a == self->details_row)
+      return 1;
+  else if (b == self->details_row)
+      return -1;
+  else if (a == self->security_row)
+      return 1;
+  else if (b == self->security_row)
+      return -1;
+  else if (a == self->devices_row)
+      return 1;
+  else if (b == self->devices_row)
+      return -1;
 
   /*
    * We can only retrieve the data after assuring that none
