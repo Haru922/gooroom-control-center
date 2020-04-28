@@ -58,8 +58,10 @@ extern GType cc_sharing_panel_get_type (void);
 extern GType cc_sound_panel_get_type (void);
 extern GType cc_font_panel_get_type (void);
 extern GType cc_themes_panel_get_type (void);
+extern GType cc_security_framework_panel_get_type (void);
 extern GType cc_gooroom_panel_get_type (void);
 extern GType cc_hancom_panel_get_type (void);
+extern GType cc_custom_panel_get_type (void);
 #ifdef BUILD_THUNDERBOLT
 extern GType cc_bolt_panel_get_type (void);
 #endif /* BUILD_THUNDERBOLT */
@@ -92,43 +94,45 @@ static struct {
   CcPanelStaticInitFunc static_init_func;
 #endif
 } all_panels[] = {
-  PANEL_TYPE("background",       cc_background_panel_get_type,           NULL),
+  PANEL_TYPE("background",         cc_background_panel_get_type,           NULL),
 #ifdef BUILD_BLUETOOTH
-  PANEL_TYPE("bluetooth",        cc_bluetooth_panel_get_type,            NULL),
+  PANEL_TYPE("bluetooth",          cc_bluetooth_panel_get_type,            NULL),
 #endif
-  PANEL_TYPE("hancom",           cc_hancom_panel_get_type,               NULL),
-  PANEL_TYPE("gooroom",          cc_gooroom_panel_get_type,              NULL),
-  PANEL_TYPE("font",             cc_font_panel_get_type,                 NULL),
-  PANEL_TYPE("themes",           cc_themes_panel_get_type,               NULL),
-  PANEL_TYPE("color",            cc_color_panel_get_type,                NULL),
-  PANEL_TYPE("datetime",         cc_date_time_panel_get_type,            NULL),
-  PANEL_TYPE("display",          cc_display_panel_get_type,              NULL),
-  PANEL_TYPE("info-overview",    cc_info_overview_panel_get_type,        NULL),
-  PANEL_TYPE("default-apps",     cc_info_default_apps_panel_get_type,    NULL),
-  PANEL_TYPE("removable-media",  cc_info_removable_media_panel_get_type, NULL),
-  PANEL_TYPE("keyboard",         cc_keyboard_panel_get_type,             NULL),
-  PANEL_TYPE("mouse",            cc_mouse_panel_get_type,                NULL),
+  PANEL_TYPE("custom",             cc_custom_panel_get_type,               NULL),
+  PANEL_TYPE("hancom",             cc_hancom_panel_get_type,               NULL),
+  PANEL_TYPE("gooroom",            cc_gooroom_panel_get_type,              NULL),
+  PANEL_TYPE("security-framework", cc_security_framework_panel_get_type,   NULL),
+  PANEL_TYPE("font",               cc_font_panel_get_type,                 NULL),
+  PANEL_TYPE("themes",             cc_themes_panel_get_type,               NULL),
+  PANEL_TYPE("color",              cc_color_panel_get_type,                NULL),
+  PANEL_TYPE("datetime",           cc_date_time_panel_get_type,            NULL),
+  PANEL_TYPE("display",            cc_display_panel_get_type,              NULL),
+  PANEL_TYPE("info-overview",      cc_info_overview_panel_get_type,        NULL),
+  PANEL_TYPE("default-apps",       cc_info_default_apps_panel_get_type,    NULL),
+  PANEL_TYPE("removable-media",    cc_info_removable_media_panel_get_type, NULL),
+  PANEL_TYPE("keyboard",           cc_keyboard_panel_get_type,             NULL),
+  PANEL_TYPE("mouse",              cc_mouse_panel_get_type,                NULL),
 #ifdef BUILD_NETWORK
-  PANEL_TYPE("network",          cc_network_panel_get_type,              NULL),
+  PANEL_TYPE("network",            cc_network_panel_get_type,              NULL),
   //PANEL_TYPE("wifi",             cc_wifi_panel_get_type,                 cc_wifi_panel_static_init_func),
-  PANEL_TYPE("wifi",             cc_wifi_panel_get_type,                 NULL),
+  PANEL_TYPE("wifi",               cc_wifi_panel_get_type,                 NULL),
 #endif
 //  PANEL_TYPE("notifications",    cc_notifications_panel_get_type,        NULL),
-  PANEL_TYPE("online-accounts",  cc_goa_panel_get_type,                  NULL),
-  PANEL_TYPE("power",            cc_power_panel_get_type,                NULL),
-  PANEL_TYPE("printers",         cc_printers_panel_get_type,             NULL),
-  PANEL_TYPE("privacy",          cc_privacy_panel_get_type,              NULL),
-  PANEL_TYPE("region",           cc_region_panel_get_type,               NULL),
-  PANEL_TYPE("search",           cc_search_panel_get_type,               NULL),
-  PANEL_TYPE("sharing",          cc_sharing_panel_get_type,              NULL),
-  PANEL_TYPE("sound",            cc_sound_panel_get_type,                NULL),
+  PANEL_TYPE("online-accounts",    cc_goa_panel_get_type,                  NULL),
+  PANEL_TYPE("power",              cc_power_panel_get_type,                NULL),
+  PANEL_TYPE("printers",           cc_printers_panel_get_type,             NULL),
+  PANEL_TYPE("privacy",            cc_privacy_panel_get_type,              NULL),
+  PANEL_TYPE("region",             cc_region_panel_get_type,               NULL),
+  PANEL_TYPE("search",             cc_search_panel_get_type,               NULL),
+  PANEL_TYPE("sharing",            cc_sharing_panel_get_type,              NULL),
+  PANEL_TYPE("sound",              cc_sound_panel_get_type,                NULL),
 #ifdef BUILD_THUNDERBOLT
-  PANEL_TYPE("thunderbolt",      cc_bolt_panel_get_type,                 NULL),
+  PANEL_TYPE("thunderbolt",        cc_bolt_panel_get_type,                 NULL),
 #endif
-  PANEL_TYPE("universal-access", cc_ua_panel_get_type,                   NULL),
-  PANEL_TYPE("user-accounts",    cc_user_panel_get_type,                 NULL),
+  PANEL_TYPE("universal-access",   cc_ua_panel_get_type,                   NULL),
+  PANEL_TYPE("user-accounts",      cc_user_panel_get_type,                 NULL),
 #ifdef BUILD_WACOM
-  PANEL_TYPE("wacom",            cc_wacom_panel_get_type,                cc_wacom_panel_static_init_func),
+  PANEL_TYPE("wacom",              cc_wacom_panel_get_type,                cc_wacom_panel_static_init_func),
 #endif
 };
 

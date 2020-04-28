@@ -374,8 +374,10 @@ static const gchar * const panel_order[] = {
 
   /* Security page */
   // TODO
+  "security-framework",
   "gooroom",
-  "hancom"
+  "hancom",
+  "custom"
 };
 
 static guint
