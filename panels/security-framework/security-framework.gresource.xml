@@ -2,6 +2,11 @@
 <gresources>
   <gresource prefix="/org/gnome/control-center/security-framework">
     <file preprocess="xml-stripblanks">security-framework.ui</file>
+    <file>images/control-center-image.svg</file>
+    <file>images/ghub-image.svg</file>
+    <file>images/gcontroller-image.svg</file>
+    <file>images/gauth-image.svg</file>
+    <file>images/apps-image.svg</file>
   </gresource>
 </gresources>
 
