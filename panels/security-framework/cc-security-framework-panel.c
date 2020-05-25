@@ -29,19 +29,31 @@
 struct _CcSecurityFrameworkPanel
 {
   CcPanel    parent_instance;
+  GtkWidget *control_center_section;
   GtkWidget *ghub_button;
   GtkWidget *gauth_button;
   GtkWidget *gcontroller_button;
   GtkWidget *apps_button;
   GtkWidget *gagent_button;
+  GtkWidget *darea_10;
+  GtkWidget *darea_11;
   GtkWidget *darea_12;
-  GtkWidget *darea_21;
-  GtkWidget *darea_23;
+  GtkWidget *darea_13;
+  GtkWidget *darea_14;
+  GtkWidget *darea_15;
+  GtkWidget *darea_22;
+  GtkWidget *darea_24;
   GtkWidget *darea_33;
+  GtkWidget *darea_50;
   GtkWidget *darea_51;
   GtkWidget *darea_52;
-  GtkWidget *darea_32;
+  GtkWidget *darea_53;
+  GtkWidget *darea_54;
+  GtkWidget *darea_55;
   GtkWidget *log_label;
+  GtkWidget *application_layer_label;
+  GtkWidget *lsf_layer_label;
+  GtkWidget *server_layer_label;
   GtkWidget *menu[CELL_NUM];
   GtkWidget *control_center_image;
   GtkWidget *ghub_image;
@@ -66,7 +78,6 @@ struct _CcSecurityFrameworkPanel
   gint       selected_cell;
   gint       scene;
   gint       scene_cnt;
-  gint       direction[LINE_NUM];
   gint       target_cell;
   gint       log_start;
   gint       log_end;
@@ -114,6 +125,23 @@ renew_log_label (CcSecurityFrameworkPanel *self)
 }
 
 static void
+draw_vertical_bar (GtkWidget *widget,
+                   cairo_t   *cr,
+                   gpointer   user_data)
+{
+  double dashed[] = { 3.0 };
+
+  set_line_color (cr, COLOR_BLACK);
+  cairo_set_line_width (cr, 2.0);
+  cairo_set_dash (cr, dashed, 1, 0);
+
+  cairo_move_to (cr, 48, 0);
+  cairo_line_to (cr, 48, 73);
+  cairo_stroke (cr);
+}
+
+
+static void
 draw_conn_cc_ghub (GtkWidget *widget,
                    cairo_t   *cr,
                    gpointer   user_data)
@@ -129,7 +157,7 @@ draw_conn_cc_ghub (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_CC_GHUB], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_CC_GHUB, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -148,7 +176,7 @@ draw_conn_ghub_gauth (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_GHUB_GAUTH], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_GHUB_GAUTH, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -167,7 +195,7 @@ draw_conn_ghub_gctrl (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_GHUB_GCTRL], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_GHUB_GCTRL, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -186,7 +214,7 @@ draw_conn_ghub_gagent (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_GHUB_GAGENT], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_GHUB_GAGENT, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -205,7 +233,7 @@ draw_conn_ghub_apps (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_GHUB_APPS], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_GHUB_APPS, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -224,7 +252,7 @@ draw_conn_gagent_gpms (GtkWidget *widget,
   {
     color = COLOR_NONE;
   }
-  do_drawing (widget, cr, self->direction[LINE_GAGENT_GPMS], color, self->scene, self->scene_cnt);
+  do_drawing (widget, cr, DIRECTION_GAGENT_GPMS, color, self->scene, self->scene_cnt);
 }
 
 static void
@@ -396,6 +424,9 @@ set_line_color (cairo_t *cr,
 {
   switch (color)
   {
+    case COLOR_BLACK:
+      cairo_set_source_rgba (cr, 0.7, 0.7, 0.7, 1);
+      break;
     case COLOR_RED:
       cairo_set_source_rgba (cr, 0.71, 0.06, 0.15, 1);
       break;
@@ -423,44 +454,25 @@ do_drawing (GtkWidget *widget,
             gint       scene_cnt)
 {
   int i;
+  int reverse = 0;
   gboolean scope = FALSE;
-  int mid_right[2] = { 75, 35 };
-  int mid_left[2] = { 15, 35 };
-  int mid_up[2] = { 45, 15 };
-  int mid_down[2] = { 45, 60 };
-  int mid_mid[2] = { 45, 35 };
-  int top_left[2] = { 15, 15 };
-  int bottom_right[2] = { 75, 55 };
-  int top_right[2] = { 75, 15 };
+  int mid_right[2] = { 78, 35 };
+  int mid_left[2] = { 18, 35 };
+  int mid_up[2] = { 46, 18 };
+  int mid_down[2] = { 46, 60 };
+  int mid_mid[2] = { 46, 35 };
+  int top_left[2] = { 18, 18 };
+  int bottom_right[2] = { 78, 55 };
+  int top_right[2] = { 78, 18 };
   int bottom_left[2] = { 0, 70 };
+  double dashed[] = { 3.0 };
 
   cairo_set_line_width (cr, 2.0);
   set_line_color (cr, color);
 
   switch (direction)
   {
-    case DIRECTION_DEFAULT_HORIZONTAL:
-      for (i = 0; i < 4; i++)
-      {
-        cairo_arc (cr, mid_left[XPOS]+(HT*i), mid_left[YPOS], RADIUS_MEDIUM, 0, 2*M_PI);
-      }
-      cairo_fill (cr);
-      break;
-    case DIRECTION_DEFAULT_VERTICAL:
-      for (i = 0; i < 4; i++)
-      {
-        cairo_arc (cr, mid_up[XPOS], mid_up[YPOS]+(VT*i), RADIUS_MEDIUM, 0, 2*M_PI);
-      }
-      cairo_fill (cr);
-      break;
-    case DIRECTION_DEFAULT_DIAGONAL_DOWN_RIGHT:
-      for (i = 0; i < 4; i++)
-      {
-        cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_MEDIUM, 0, 2*M_PI);
-      }
-      cairo_fill (cr);
-      break;
-    case DIRECTION_UP:
+    case DIRECTION_GHUB_GAUTH:
       switch (scene)
       {
         case SCENE_GHUB_BROADCAST:
@@ -477,12 +489,20 @@ do_drawing (GtkWidget *widget,
             scope = TRUE;
           }
           break;
+        case SCENE_GAUTH_RESPONSE:
+          if (SCENE_GAUTH_RESPONSE_GAUTH_BLINKING < scene_cnt
+              && scene_cnt < SCENE_GAUTH_RESPONSE_GAUTH_BLINKING+6)
+          {
+            scope = TRUE;
+            reverse = 1;
+          }
+          break;
       }
       for (i = 0; i < 4; i++)
       {
         if (scope)
         {
-          if (!((scene_cnt+i)%2))
+          if (!((scene_cnt+i+reverse)%2))
           {
             set_line_color (cr, color);
             cairo_arc (cr, mid_down[XPOS], mid_down[YPOS]-(VT*i), RADIUS_SMALL, 0, 2*M_PI);
@@ -501,7 +521,7 @@ do_drawing (GtkWidget *widget,
         cairo_fill (cr);
       }
       break;
-    case DIRECTION_DOWN:
+    case DIRECTION_GHUB_GCTRL:
       switch (scene)
       {
         case SCENE_GHUB_BROADCAST:
@@ -519,19 +539,12 @@ do_drawing (GtkWidget *widget,
             scope = TRUE;
           }
           break;
-        case SCENE_GAUTH_RESPONSE:
-          if (SCENE_GAUTH_RESPONSE_GAUTH_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GAUTH_RESPONSE_GAUTH_BLINKING+6)
-          {
-            scope = TRUE;
-          }
-          break;
       }
       for (i = 0; i < 4; i++)
       {
         if (scope)
         {
-          if (!((scene_cnt+i)%2))
+          if (!((scene_cnt+i+reverse)%2))
           {
             set_line_color (cr, color);
             cairo_arc (cr, mid_up[XPOS], mid_up[YPOS]+(VT*i), RADIUS_SMALL, 0, 2*M_PI);
@@ -550,7 +563,7 @@ do_drawing (GtkWidget *widget,
         cairo_fill (cr);
       }
       break;
-    case DIRECTION_RIGHT:
+    case DIRECTION_GHUB_GAGENT:
       switch (scene)
       {
         case SCENE_GHUB_BROADCAST:
@@ -560,19 +573,12 @@ do_drawing (GtkWidget *widget,
             scope = TRUE;
           }
           break;
-        case SCENE_GCTRL_KILL:
-        case SCENE_GCTRL_LAUNCH:
-          if (SCENE_GCTRL_KILL_CC_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GCTRL_KILL_CC_BLINKING+6)
+        case SCENE_POLICY_RELOAD:
+          if (SCENE_POLICY_RELOAD_GAGENT_BLINKING < scene_cnt
+              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+6)
           {
             scope = TRUE;
-          }
-          break;
-        case SCENE_GAUTH_RESPONSE:
-          if (SCENE_GAUTH_RESPONSE_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+6)
-          {
-            scope = TRUE;
+            reverse = 1;
           }
           break;
       }
@@ -580,7 +586,7 @@ do_drawing (GtkWidget *widget,
       {
         if (scope)
         {
-          if ((scene_cnt+i)%2)
+          if ((scene_cnt+i+reverse)%2)
           {
             set_line_color (cr, COLOR_YELLOW);
             cairo_arc (cr, mid_left[XPOS]+(HT*i), mid_left[YPOS], RADIUS_LARGE, 0, 2*M_PI);
@@ -599,28 +605,22 @@ do_drawing (GtkWidget *widget,
         cairo_fill (cr);
       }
       break;
-    case DIRECTION_LEFT:
+    case DIRECTION_GAGENT_GPMS:
       switch (scene)
       {
         case SCENE_POLICY_RELOAD:
-          if (SCENE_POLICY_RELOAD_GAGENT_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+6)
+          if (SCENE_POLICY_RELOAD_GPMS_BLINKING < scene_cnt
+              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
-        case SCENE_GHUB_BROADCAST:
-          if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
-          {
-            scope = TRUE;
-          }
       }
       for (i = 0; i < 4; i++)
       {
         if (scope)
         {
-          if ((scene_cnt+i)%2)
+          if ((scene_cnt+i+reverse)%2)
           {
             set_line_color (cr, COLOR_YELLOW);
             cairo_arc (cr, mid_right[XPOS]-(HT*i), mid_right[YPOS], RADIUS_LARGE, 0, 2*M_PI);
@@ -637,8 +637,13 @@ do_drawing (GtkWidget *widget,
         }
         cairo_fill (cr);
       }
+      set_line_color (cr, COLOR_BLACK);
+      cairo_set_dash (cr, dashed, 1, 0);
+      cairo_move_to (cr, 48, 0);
+      cairo_line_to (cr, 48, 73);
+      cairo_stroke (cr);
       break;
-    case DIRECTION_DOWN_RIGHT:
+    case DIRECTION_GHUB_APPS:
       switch (scene)
       {
         case SCENE_GHUB_BROADCAST:
@@ -648,18 +653,75 @@ do_drawing (GtkWidget *widget,
             scope = TRUE;
           }
           break;
+        case SCENE_APP_REQUEST:
+          if (SCENE_APP_REQUEST_APP_BLINKING < scene_cnt
+              && scene_cnt < SCENE_APP_REQUEST_APP_BLINKING+6)
+          {
+            scope = TRUE;
+            reverse = 1;
+          }
+          break;
         case SCENE_GAUTH_RESPONSE:
           if (SCENE_GAUTH_RESPONSE_GHUB_BLINKING < scene_cnt
               && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
+          break;
       }
       for (i = 0; i < 4; i++)
       {
         if (scope)
         {
-          if ((scene_cnt+i)%2)
+          if ((scene_cnt+i+reverse)%2)
+          {
+            set_line_color (cr, COLOR_YELLOW);
+            cairo_arc (cr, top_right[XPOS]-(HT*i), top_right[YPOS]+(VT*i), RADIUS_LARGE, 0, 2*M_PI);
+          }
+          else
+          {
+            set_line_color (cr, color);
+            cairo_arc (cr, top_right[XPOS]-(HT*i), top_right[YPOS]+(VT*i), RADIUS_SMALL, 0, 2*M_PI);
+          }
+        }
+        else
+        {
+          set_line_color (cr, color);
+          cairo_arc (cr, top_right[XPOS]-(HT*i), top_right[YPOS]+(VT*i), RADIUS_MEDIUM, 0, 2*M_PI);
+        }
+        cairo_fill (cr);
+      }
+      set_line_color (cr, COLOR_BLACK);
+      cairo_set_dash (cr, dashed, 1, 0);
+      cairo_move_to (cr, 48, 0);
+      cairo_line_to (cr, 48, 73);
+      cairo_stroke (cr);
+      break;
+    case DIRECTION_CC_GHUB:
+      switch (scene)
+      {
+        case SCENE_GHUB_BROADCAST:
+          if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
+          {
+            scope = TRUE;
+            reverse = 1;
+          }
+          break;
+        case SCENE_GCTRL_KILL:
+        case SCENE_GCTRL_LAUNCH:
+          if (SCENE_GCTRL_KILL_CC_BLINKING < scene_cnt
+              && scene_cnt < SCENE_GCTRL_KILL_CC_BLINKING+6)
+          {
+            scope = TRUE;
+          }
+          break;
+      }
+      for (i = 0; i < 4; i++)
+      {
+        if (scope)
+        {
+          if ((scene_cnt+i+reverse)%2)
           {
             set_line_color (cr, COLOR_YELLOW);
             cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_LARGE, 0, 2*M_PI);
@@ -677,94 +739,11 @@ do_drawing (GtkWidget *widget,
         }
         cairo_fill (cr);
       }
-      break;
-    case DIRECTION_UP_LEFT:
-      switch (scene)
-      {
-        case SCENE_APP_REQUEST:
-          if (SCENE_APP_REQUEST_APP_BLINKING < scene_cnt
-              && scene_cnt < SCENE_APP_REQUEST_APP_BLINKING+6)
-          {
-            scope = TRUE;
-          }
-          break;
-      }
-      for (i = 0; i < 4; i++)
-      {
-        if (scope)
-        {
-          if ((scene_cnt+i)%2)
-          {
-            set_line_color (cr, color);
-            cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_SMALL, 0, 2*M_PI);
-          }
-          else
-          {
-            set_line_color (cr, COLOR_YELLOW);
-            cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_LARGE, 0, 2*M_PI);
-          }
-        }
-        else
-        {
-          set_line_color (cr, color);
-          cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_MEDIUM, 0, 2*M_PI);
-        }
-        cairo_fill (cr);
-      }
-      break;
-    case DIRECTION_CUSTOM:
-      switch (scene)
-      {
-        case SCENE_POLICY_RELOAD:
-          if (SCENE_POLICY_RELOAD_GPMS_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+6)
-          {
-            scope = TRUE;
-          }
-          break;
-      }
-      for (i = 0; i < 4; i++)
-      {
-        if (scope)
-        {
-          if (!((scene_cnt+i)%2))
-          {
-            set_line_color (cr, color);
-            if (i < 2)
-            {
-              cairo_arc (cr, mid_up[XPOS], mid_right[YPOS]-(VT*(1-i)), RADIUS_SMALL, 0, 2*M_PI);
-            }
-            else
-            {
-              cairo_arc (cr, mid_up[XPOS]-(VT*(i-1)), mid_right[YPOS], RADIUS_SMALL, 0, 2*M_PI);
-            }
-          }
-          else
-          {
-            set_line_color (cr, COLOR_YELLOW);
-            if (i < 2)
-            {
-              cairo_arc (cr, mid_up[XPOS], mid_right[YPOS]-(VT*(1-i)), RADIUS_LARGE, 0, 2*M_PI);
-            }
-            else
-            {
-              cairo_arc (cr, mid_up[XPOS]-(VT*(i-1)), mid_right[YPOS], RADIUS_LARGE, 0, 2*M_PI);
-            }
-          }
-        }
-        else
-        {
-          if (i < 2)
-          {
-            cairo_arc (cr, mid_up[XPOS], mid_right[YPOS]-(VT*(1-i)), RADIUS_MEDIUM, 0, 2*M_PI);
-          }
-          else
-          {
-            cairo_arc (cr, mid_up[XPOS]-(VT*(i-1)), mid_right[YPOS], RADIUS_MEDIUM, 0, 2*M_PI);
-          }
-        }
-        cairo_fill (cr);
-      }
+      set_line_color (cr, COLOR_BLACK);
+      cairo_set_dash (cr, dashed, 1, 0);
+      cairo_move_to (cr, 48, 0);
+      cairo_line_to (cr, 48, 73);
+      cairo_stroke (cr);
       break;
   }
 }
@@ -924,77 +903,17 @@ static void
 draw_lines (CcSecurityFrameworkPanel *self)
 {
   gtk_widget_queue_draw (self->darea_12);
-  gtk_widget_queue_draw (self->darea_21);
-  gtk_widget_queue_draw (self->darea_23);
+  gtk_widget_queue_draw (self->darea_22);
+  gtk_widget_queue_draw (self->darea_24);
   gtk_widget_queue_draw (self->darea_33);
-  gtk_widget_queue_draw (self->darea_32);
-  gtk_widget_queue_draw (self->darea_52);
+  gtk_widget_queue_draw (self->darea_14);
+  gtk_widget_queue_draw (self->darea_53);
 }
 
-static void
-set_scene_conf (CcSecurityFrameworkPanel *self)
-{
-  int i;
-
-  switch (self->scene)
-  {
-    case SCENE_IDLE:
-      self->direction[LINE_CC_GHUB] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_DEFAULT_DIAGONAL_DOWN_RIGHT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break;
-    case SCENE_GHUB_BROADCAST:
-      self->direction[LINE_CC_GHUB] = DIRECTION_LEFT;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_UP;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DOWN;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_RIGHT;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_DOWN_RIGHT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break;
-    case SCENE_POLICY_RELOAD:
-      self->direction[LINE_CC_GHUB] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_LEFT;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_DEFAULT_DIAGONAL_DOWN_RIGHT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break; 
-    case SCENE_GCTRL_KILL:
-    case SCENE_GCTRL_LAUNCH:
-      self->direction[LINE_CC_GHUB] = DIRECTION_RIGHT;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DOWN;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_DEFAULT_DIAGONAL_DOWN_RIGHT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break;
-    case SCENE_APP_REQUEST:
-      self->direction[LINE_CC_GHUB] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_UP;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_UP_LEFT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break;
-    case SCENE_GAUTH_RESPONSE:
-      self->direction[LINE_CC_GHUB] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_GAUTH] = DIRECTION_DOWN;
-      self->direction[LINE_GHUB_GCTRL] = DIRECTION_DEFAULT_VERTICAL;
-      self->direction[LINE_GHUB_GAGENT] = DIRECTION_DEFAULT_HORIZONTAL;
-      self->direction[LINE_GHUB_APPS] = DIRECTION_DOWN_RIGHT;
-      self->direction[LINE_GAGENT_GPMS] = DIRECTION_CUSTOM;
-      break;
-  }
-}
 
 static void
 scene_handler (CcSecurityFrameworkPanel *self)
 {
-  set_scene_conf (self);
-
   if (self->scene == SCENE_IDLE)
   {
     self->animating = FALSE;
@@ -1017,7 +936,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_POLICY_RELOAD:
             gtk_label_set_text (GTK_LABEL (self->message_label[GPMS_CELL]),
-                                "<b><span font='12' font-weight='bold'  background='#ffffff' foreground='#6495ed'>보안 정책 변경</span></b>");
+                                "<b><span font='10' font-weight='bold'  background='#ffffff' foreground='#6495ed'>보안 정책 변경</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GPMS_CELL]), TRUE);
             enqueue_log_label (self, "GPMS: 보안 정책 변경");
             renew_log_label (self);
@@ -1025,7 +944,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_GHUB_BROADCAST:
             gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
-                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
+                                "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
             enqueue_log_label (self, "GHUB: 보안 정책 변경 전달");
             renew_log_label (self);
@@ -1033,7 +952,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_GCTRL_KILL:
             gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
-                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지 요청</span></b>");
+                                "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
             enqueue_log_label (self, "CC: 앱 정지 요청");
             renew_log_label (self);
@@ -1041,7 +960,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_GCTRL_LAUNCH:
             gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
-                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행 요청</span></b>");
+                                "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
             enqueue_log_label (self, "CC: 앱 실행 요청");
             renew_log_label (self);
@@ -1049,7 +968,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_APP_REQUEST:
             gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
-                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청</span></b>");
+                                "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[APPS_CELL]), TRUE);
             enqueue_log_label (self, "APPS: 앱 인증 요청");
             renew_log_label (self);
@@ -1057,7 +976,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_GAUTH_RESPONSE:
             gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
-                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 확인</span></b>");
+                                "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 확인</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
             enqueue_log_label (self, "GAUTH: 앱 인증 확인");
             renew_log_label (self);
@@ -1115,7 +1034,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GPMS_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_52);
+            gtk_widget_queue_draw (self->darea_53);
             break;
           case SCENE_GHUB_BROADCAST:
             if (self->scene_cnt == 6)
@@ -1123,10 +1042,10 @@ scene_handler (CcSecurityFrameworkPanel *self)
               gtk_popover_popdown (GTK_POPOVER (self->popover[GHUB_CELL]));
             }
             gtk_widget_queue_draw (self->darea_12);
-            gtk_widget_queue_draw (self->darea_21);
-            gtk_widget_queue_draw (self->darea_23);
-            gtk_widget_queue_draw (self->darea_32);
+            gtk_widget_queue_draw (self->darea_22);
+            gtk_widget_queue_draw (self->darea_24);
             gtk_widget_queue_draw (self->darea_33);
+            gtk_widget_queue_draw (self->darea_14);
             break;
           case SCENE_GCTRL_KILL:
           case SCENE_GCTRL_LAUNCH:
@@ -1141,14 +1060,14 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[APPS_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_33);
+            gtk_widget_queue_draw (self->darea_14);
             break;
           case SCENE_GAUTH_RESPONSE:
             if (self->scene_cnt == 6)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GAUTH_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_21);
+            gtk_widget_queue_draw (self->darea_22);
             break;
         }
         break;
@@ -1159,7 +1078,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 11)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAGENT_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAGENT_CELL]));
               enqueue_log_label (self, "GAGENT: 보안 정책 변경 전달");
@@ -1171,15 +1090,15 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 11)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
@@ -1210,7 +1129,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 11)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>메시지 전달</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>메시지 전달</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
               enqueue_log_label (self, "GHUB: 메시지 전달");
               renew_log_label (self);
@@ -1227,7 +1146,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 14)
             {
               gtk_widget_hide (self->cover_popover);
-              gtk_image_clear (self->lsf_image);
+              gtk_image_clear (GTK_IMAGE (self->lsf_image));
               self->scene = SCENE_POLICY_RELOAD;
               self->scene_cnt = SCENE_END;
             }
@@ -1258,7 +1177,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GAGENT_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_32);
+            gtk_widget_queue_draw (self->darea_33);
             break;
           case SCENE_GHUB_BROADCAST:
             if (self->scene_cnt == 16)
@@ -1278,21 +1197,21 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GHUB_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_23);
+            gtk_widget_queue_draw (self->darea_24);
             break;
           case SCENE_APP_REQUEST:
             if (self->scene_cnt == 16)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GHUB_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_21);
+            gtk_widget_queue_draw (self->darea_22);
             break;
           case SCENE_GAUTH_RESPONSE:
             if (self->scene_cnt == 16)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GHUB_CELL]));
             }
-            gtk_widget_queue_draw (self->darea_33);
+            gtk_widget_queue_draw (self->darea_14);
             break;
         }
         break;
@@ -1303,7 +1222,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 21)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
               enqueue_log_label (self, "GHUB: 보안 정책 반영");
@@ -1318,14 +1237,14 @@ scene_handler (CcSecurityFrameworkPanel *self)
               if (self->scene == SCENE_GCTRL_KILL)
               {
                 gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
-                                    "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지</span></b>");
+                                    "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지</span></b>");
                 gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
                 enqueue_log_label (self, "GCTRL: 앱 정지");
               }
               else
               {
                 gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
-                                    "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행</span></b>");
+                                    "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행</span></b>");
                 gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
                 enqueue_log_label (self, "GCTRL: 앱 실행");
               }
@@ -1338,7 +1257,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 21)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청 확인</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청 확인</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAUTH_CELL]));
               enqueue_log_label (self, "GAUTH: 앱 인증 요청 확인");
@@ -1350,7 +1269,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 21)
             {
               gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
-                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 결과 확인</span></b>");
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 결과 확인</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[APPS_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[APPS_CELL]));
               enqueue_log_label (self, "APPS: 앱 인증 결과 확인");
@@ -1472,13 +1391,24 @@ cc_security_framework_panel_class_init (CcSecurityFrameworkPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, gcontroller_button);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, gagent_button);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, apps_button);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_10);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_11);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_12);
-  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_21);
-  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_23);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_13);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_14);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_15);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_22);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_24);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_33);
-  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_32);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_50);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_51);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_52);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_53);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_54);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, darea_55);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, application_layer_label);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, lsf_layer_label);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, server_layer_label);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, control_center_image);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, ghub_image);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, gauth_image);
@@ -1487,6 +1417,7 @@ cc_security_framework_panel_class_init (CcSecurityFrameworkPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, gagent_image);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, apps_image);
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, module_info_box);
+  gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, control_center_section);
 }
 
 static void
@@ -1497,11 +1428,13 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   PangoAttrList *pg_attr_list; 
   PangoAttribute *pg_attr;
   GdkRGBA cover_color;
+  GdkRGBA application_layer_color;
 
   g_resources_register (cc_security_framework_get_resource ());
 
   gtk_widget_init_template (GTK_WIDGET (self));
   gdk_rgba_parse (&cover_color, "#000000");
+  gdk_rgba_parse (&application_layer_color, "rgba(255,0,0,0.5)");
 
   get_modules_state (self);
   set_modules_opacity (self); 
@@ -1513,7 +1446,6 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   self->selected_cell = -1;
   self->scene = SCENE_IDLE;
   self->target_cell = APPS_CELL;
-  set_scene_conf (self);
 
   event_box = gtk_event_box_new ();
   gtk_event_box_set_above_child (GTK_EVENT_BOX (event_box), FALSE);
@@ -1584,34 +1516,74 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gtk_box_pack_start (GTK_BOX (self->cover_box), self->sound_wave, FALSE, FALSE, 0);
 
   self->cover_popover = gtk_popover_new (self->lsf_image);
-  gtk_widget_set_size_request (self->cover_popover, 600, 450);
+  gtk_widget_set_size_request (self->cover_popover, 700, 500);
   gtk_widget_override_background_color (self->cover_popover, GTK_STATE_FLAG_NORMAL, &cover_color);
   gtk_container_add (GTK_CONTAINER (self->cover_popover), self->cover_box);
   gtk_popover_set_modal (GTK_POPOVER (self->cover_popover), FALSE);
 
   gtk_widget_show_all (self->module_info_box);
 
+  /*
+  g_signal_connect (G_OBJECT (self->darea_10),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+                    */
+  g_signal_connect (G_OBJECT (self->darea_11),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  g_signal_connect (G_OBJECT (self->darea_13),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  g_signal_connect (G_OBJECT (self->darea_15),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  /*
+  g_signal_connect (G_OBJECT (self->darea_50),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+                    */
+  g_signal_connect (G_OBJECT (self->darea_51),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  g_signal_connect (G_OBJECT (self->darea_52),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  g_signal_connect (G_OBJECT (self->darea_54),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
+  g_signal_connect (G_OBJECT (self->darea_55),
+                    "draw",
+                    G_CALLBACK (draw_vertical_bar),
+                    self);
   g_signal_connect (G_OBJECT (self->darea_12),
                     "draw",
                     G_CALLBACK (draw_conn_cc_ghub),
                     self);
-  g_signal_connect (G_OBJECT (self->darea_21),
+  g_signal_connect (G_OBJECT (self->darea_22),
                     "draw",
                     G_CALLBACK (draw_conn_ghub_gauth),
                     self);
-  g_signal_connect (G_OBJECT (self->darea_23),
+  g_signal_connect (G_OBJECT (self->darea_24),
                     "draw",
                     G_CALLBACK (draw_conn_ghub_gctrl),
                     self);
-  g_signal_connect (G_OBJECT (self->darea_33),
+  g_signal_connect (G_OBJECT (self->darea_14),
                     "draw",
                     G_CALLBACK (draw_conn_ghub_apps),
                     self);
-  g_signal_connect (G_OBJECT (self->darea_52),
+  g_signal_connect (G_OBJECT (self->darea_53),
                     "draw",
                     G_CALLBACK (draw_conn_gagent_gpms),
                     self);
-  g_signal_connect (G_OBJECT (self->darea_32),
+  g_signal_connect (G_OBJECT (self->darea_33),
                     "draw",
                     G_CALLBACK (draw_conn_ghub_gagent),
                     self);
@@ -1639,6 +1611,15 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
                     "button-press-event",
                     G_CALLBACK (log_label_clicked),
                     self);
+  gtk_label_set_text (GTK_LABEL (self->application_layer_label),
+                                "<b><span font='12' font-weight='bold' foreground='#3a3c84'>       보안\n애플리케이션\n</span></b>");
+  gtk_label_set_use_markup (GTK_LABEL (self->application_layer_label), TRUE);
+  gtk_label_set_text (GTK_LABEL (self->lsf_layer_label),
+                                "<b><span font='12' font-weight='bold' foreground='#3a3c84'>        경량\n보안프레임워크\n</span></b>");
+  gtk_label_set_use_markup (GTK_LABEL (self->lsf_layer_label), TRUE);
+  gtk_label_set_text (GTK_LABEL (self->server_layer_label),
+                                "<b><span font='12' font-weight='bold' foreground='#3a3c84'>  단말운용\n관리솔루션\n</span></b>");
+  gtk_label_set_use_markup (GTK_LABEL (self->server_layer_label), TRUE);
 }
 
 GtkWidget *

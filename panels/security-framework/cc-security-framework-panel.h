@@ -31,7 +31,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define YPOS                                 1
 
 #define VT                                  15
-#define HT                                  20
+#define HT                                  20 
   
 #define SCENE_GHUB_BROADCAST_GHUB_BLINKING   5
 
@@ -50,6 +50,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define SCENE_CNT                           27
 #define SCENE_END                           -1
 
+#define REVERSE                              1
 #define LOG_BUF                              8 
 
 #define CC_IMG           "images/control-center-image.svg"
@@ -96,31 +97,13 @@ enum
 
 enum
 {
-  DIRECTION_NONE,
-  DIRECTION_DEFAULT_HORIZONTAL,
-  DIRECTION_DEFAULT_VERTICAL,
-  DIRECTION_DEFAULT_DIAGONAL_DOWN_RIGHT,
-  DIRECTION_UP,
-  DIRECTION_DOWN,
-  DIRECTION_RIGHT,
-  DIRECTION_LEFT,
-  DIRECTION_UP_RIGHT,
-  DIRECTION_UP_LEFT,
-  DIRECTION_DOWN_RIGHT,
-  DIRECTION_DOWN_LEFT,
-  DIRECTION_CUSTOM,
+  DIRECTION_CC_GHUB,
+  DIRECTION_GHUB_GAUTH,
+  DIRECTION_GHUB_GAGENT,
+  DIRECTION_GHUB_GCTRL,
+  DIRECTION_GHUB_APPS,
+  DIRECTION_GAGENT_GPMS,
   DIRECTION_NUM
-};
-
-enum
-{
-  LINE_CC_GHUB,
-  LINE_GHUB_GAUTH,
-  LINE_GHUB_GCTRL,
-  LINE_GHUB_APPS,
-  LINE_GHUB_GAGENT,
-  LINE_GAGENT_GPMS,
-  LINE_NUM
 };
 
 enum
@@ -130,6 +113,7 @@ enum
   COLOR_GREEN,
   COLOR_BLUE,
   COLOR_YELLOW,
+  COLOR_BLACK,
   COLOR_NUM
 };
 

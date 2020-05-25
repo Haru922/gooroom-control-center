@@ -57,7 +57,7 @@
               </object>
               <packing>
                 <property name="left_attach">2</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
@@ -73,7 +73,7 @@
               </object>
               <packing>
                 <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
+                <property name="top_attach">1</property>
               </packing>
             </child>
             <child>
@@ -89,7 +89,7 @@
               </object>
               <packing>
                 <property name="left_attach">2</property>
-                <property name="top_attach">4</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -104,8 +104,8 @@
                 <property name="always_show_image">True</property>
               </object>
               <packing>
-                <property name="left_attach">4</property>
-                <property name="top_attach">4</property>
+                <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -121,7 +121,7 @@
               </object>
               <packing>
                 <property name="left_attach">4</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
@@ -156,7 +156,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">1</property>
               </packing>
             </child>
             <child>
@@ -190,8 +190,8 @@
                 </child>
               </object>
               <packing>
-                <property name="left_attach">5</property>
-                <property name="top_attach">1</property>
+                <property name="left_attach">6</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
@@ -225,6 +225,26 @@
               </packing>
             </child>
             <child>
+              <object class="GtkDrawingArea" id="darea_02">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="darea_03">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkDrawingArea" id="darea_11">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -235,13 +255,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkDrawingArea" id="darea_21">
+              <object class="GtkDrawingArea" id="darea_22">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
-                <property name="top_attach">1</property>
+                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -252,6 +272,16 @@
               <packing>
                 <property name="left_attach">3</property>
                 <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="darea_50">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="top_attach">0</property>
               </packing>
             </child>
             <child>
@@ -275,6 +305,36 @@
               </packing>
             </child>
             <child>
+              <object class="GtkDrawingArea" id="darea_53">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="darea_54">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="darea_55">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkDrawingArea" id="darea_12">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -282,6 +342,16 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="darea_15">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -295,16 +365,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkDrawingArea" id="darea_03">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">3</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkDrawingArea" id="darea_13">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -315,13 +375,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkDrawingArea" id="darea_23">
+              <object class="GtkDrawingArea" id="darea_24">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
-                <property name="top_attach">3</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
             <child>
@@ -362,6 +422,40 @@
               <packing>
                 <property name="left_attach">3</property>
                 <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="application_layer_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Application Layer</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lsf_layer_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Security Framework Layer</property>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+                <property name="width">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="server_layer_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Server Layer</property>
+              </object>
+              <packing>
+                <property name="left_attach">6</property>
+                <property name="top_attach">0</property>
               </packing>
             </child>
           </object>
