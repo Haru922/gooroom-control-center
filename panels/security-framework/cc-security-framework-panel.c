@@ -86,6 +86,7 @@ static void
 enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
 {
   self->log_end = (self->log_end+1)%LOG_BUF;
+
   if (self->log_cnt == LOG_BUF)
   {
     g_free (self->log_message[self->log_start]);
@@ -101,8 +102,8 @@ enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
 static void
 renew_log_label (CcSecurityFrameworkPanel *self)
 {
-  gchar *logs = "";
   int i;
+  gchar *logs = "";
 
   for (i = 0; i != self->log_cnt; i++)
   {
@@ -155,8 +156,8 @@ draw_conn_ghub_gctrl (GtkWidget *widget,
                       cairo_t   *cr,
                       gpointer   user_data)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   int color;
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
   if (self->activated[GHUB_CELL] && self->activated[GCTRL_CELL])
   {
@@ -174,8 +175,8 @@ draw_conn_ghub_gagent (GtkWidget *widget,
                        cairo_t   *cr,
                        gpointer   user_data)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   int color;
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
   if (self->activated[GHUB_CELL] && self->activated[GAGENT_CELL])
   {
@@ -193,8 +194,8 @@ draw_conn_ghub_apps (GtkWidget *widget,
                      cairo_t   *cr,
                      gpointer   user_data)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   int color;
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
   if (self->activated[GHUB_CELL] && self->activated[APPS_CELL])
   {
@@ -212,8 +213,8 @@ draw_conn_gagent_gpms (GtkWidget *widget,
                        cairo_t   *cr,
                        gpointer   user_data)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   int color;
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
   if (self->activated[GAGENT_CELL])
   {
@@ -243,7 +244,8 @@ update_module_state (CcSecurityFrameworkPanel *self,
 
 static void
 log_label_clicked (GtkWidget      *widget,
-                   GdkEventButton *event, gpointer        user_data)
+                   GdkEventButton *event,
+                   gpointer        user_data)
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
@@ -344,6 +346,7 @@ default_menu_handler (GtkWidget *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
+
   g_print ("%s\n", selection);
 }
 
@@ -352,9 +355,10 @@ gctrl_menu_handler (GtkWidget *widget,
                     GdkEvent  *event,
                     gpointer   user_data)
 {
-  GtkWidget *app_ctrl_window;
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
+  GtkWidget *app_ctrl_window;
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
+
   if (!g_strcmp0 (selection, "Application Control"))
   {
     app_ctrl_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -373,6 +377,7 @@ menu_item_selected (GtkWidget *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
+
   if (!g_strcmp0 (selection, "Received Message"))
   {
   }
@@ -417,6 +422,8 @@ do_drawing (GtkWidget *widget,
             gint       scene,
             gint       scene_cnt)
 {
+  int i;
+  gboolean scope = FALSE;
   int mid_right[2] = { 75, 35 };
   int mid_left[2] = { 15, 35 };
   int mid_up[2] = { 45, 15 };
@@ -426,8 +433,6 @@ do_drawing (GtkWidget *widget,
   int bottom_right[2] = { 75, 55 };
   int top_right[2] = { 75, 15 };
   int bottom_left[2] = { 0, 70 };
-  int i;
-  gboolean scope = FALSE;
 
   cairo_set_line_width (cr, 2.0);
   set_line_color (cr, color);
@@ -460,14 +465,14 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_GHUB_BROADCAST:
           if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
         case SCENE_APP_REQUEST:
           if (SCENE_APP_REQUEST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_APP_REQUEST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_APP_REQUEST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -501,7 +506,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_GHUB_BROADCAST:
           if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -509,14 +514,14 @@ do_drawing (GtkWidget *widget,
         case SCENE_GCTRL_KILL:
         case SCENE_GCTRL_LAUNCH:
           if (SCENE_GCTRL_KILL_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GCTRL_KILL_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GCTRL_KILL_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
         case SCENE_GAUTH_RESPONSE:
           if (SCENE_GAUTH_RESPONSE_GAUTH_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GAUTH_RESPONSE_GAUTH_BLINKING+5)
+              && scene_cnt < SCENE_GAUTH_RESPONSE_GAUTH_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -550,7 +555,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_GHUB_BROADCAST:
           if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -558,14 +563,14 @@ do_drawing (GtkWidget *widget,
         case SCENE_GCTRL_KILL:
         case SCENE_GCTRL_LAUNCH:
           if (SCENE_GCTRL_KILL_CC_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GCTRL_KILL_CC_BLINKING+5)
+              && scene_cnt < SCENE_GCTRL_KILL_CC_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
         case SCENE_GAUTH_RESPONSE:
           if (SCENE_GAUTH_RESPONSE_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -599,14 +604,14 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_POLICY_RELOAD:
           if (SCENE_POLICY_RELOAD_GAGENT_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+5)
+              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
         case SCENE_GHUB_BROADCAST:
           if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -638,14 +643,14 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_GHUB_BROADCAST:
           if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
           break;
         case SCENE_GAUTH_RESPONSE:
           if (SCENE_GAUTH_RESPONSE_GHUB_BLINKING < scene_cnt
-              && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+5)
+              && scene_cnt < SCENE_GAUTH_RESPONSE_GHUB_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -678,7 +683,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_APP_REQUEST:
           if (SCENE_APP_REQUEST_APP_BLINKING < scene_cnt
-              && scene_cnt < SCENE_APP_REQUEST_APP_BLINKING+5)
+              && scene_cnt < SCENE_APP_REQUEST_APP_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -688,7 +693,7 @@ do_drawing (GtkWidget *widget,
       {
         if (scope)
         {
-          if (!((scene_cnt+i)%2))
+          if ((scene_cnt+i)%2)
           {
             set_line_color (cr, color);
             cairo_arc (cr, top_left[XPOS]+(HT*i), top_left[YPOS]+(VT*i), RADIUS_SMALL, 0, 2*M_PI);
@@ -712,7 +717,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_POLICY_RELOAD:
           if (SCENE_POLICY_RELOAD_GPMS_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+5)
+              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+6)
           {
             scope = TRUE;
           }
@@ -783,7 +788,7 @@ set_menu_items (CcSecurityFrameworkPanel *object,
   GtkWidget *menu;
   GtkWidget *sub_menu;
   GtkWidget *menu_item;
-  GSList    *conf_group = NULL;
+  GSList *conf_group = NULL;
 
   if (module == APPS_CELL)
   {
@@ -989,6 +994,7 @@ static void
 scene_handler (CcSecurityFrameworkPanel *self)
 {
   set_scene_conf (self);
+
   if (self->scene == SCENE_IDLE)
   {
     self->animating = FALSE;
@@ -1003,49 +1009,55 @@ scene_handler (CcSecurityFrameworkPanel *self)
         switch (self->scene)
         {
           case SCENE_PRESENTING:
-            gtk_widget_set_opacity (self->cover_popover, 0.85);
-            gtk_widget_set_opacity (self->lsf_image, 1);
+            gtk_widget_set_opacity (self->cover_popover, 0.75);
+            gtk_image_set_from_file (GTK_IMAGE (self->lsf_image), LSF_IMG);
             gtk_widget_show_all (self->cover_popover);
             gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), "images/sound-wave.gif");
             g_spawn_command_line_async ("/usr/bin/aplay /home/haru/policy-reload.wav", NULL);
             break;
           case SCENE_POLICY_RELOAD:
-            gtk_label_set_text (GTK_LABEL (self->message_label[GPMS_CELL]), "<b><span font='12' font-weight='bold'  background='#ffffff' foreground='#006400'>보안 정책 변경</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[GPMS_CELL]),
+                                "<b><span font='12' font-weight='bold'  background='#ffffff' foreground='#6495ed'>보안 정책 변경</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GPMS_CELL]), TRUE);
             enqueue_log_label (self, "GPMS: 보안 정책 변경");
             renew_log_label (self);
             gtk_popover_popup (GTK_POPOVER (self->popover[GPMS_CELL]));
             break;
           case SCENE_GHUB_BROADCAST:
-            gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 변경 전달</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
+                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
             enqueue_log_label (self, "GHUB: 보안 정책 변경 전달");
             renew_log_label (self);
             gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
             break;
           case SCENE_GCTRL_KILL:
-            gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 정지 요청</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
+                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
             enqueue_log_label (self, "CC: 앱 정지 요청");
             renew_log_label (self);
             gtk_popover_popup (GTK_POPOVER (self->popover[CC_CELL]));
             break;
           case SCENE_GCTRL_LAUNCH:
-            gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 실행 요청</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
+                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
             enqueue_log_label (self, "CC: 앱 실행 요청");
             renew_log_label (self);
             gtk_popover_popup (GTK_POPOVER (self->popover[CC_CELL]));
             break;
           case SCENE_APP_REQUEST:
-            gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 인증 요청</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
+                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[APPS_CELL]), TRUE);
             enqueue_log_label (self, "APPS: 앱 인증 요청");
             renew_log_label (self);
             gtk_popover_popup (GTK_POPOVER (self->popover[APPS_CELL]));
             break;
           case SCENE_GAUTH_RESPONSE:
-            gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 인증 확인</span></b>");
+            gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
+                                "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 확인</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
             enqueue_log_label (self, "GAUTH: 앱 인증 확인");
             renew_log_label (self);
@@ -1146,7 +1158,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_POLICY_RELOAD:
             if (self->scene_cnt == 11)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 변경 전달</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAGENT_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAGENT_CELL]));
               enqueue_log_label (self, "GAGENT: 보안 정책 변경 전달");
@@ -1157,11 +1170,16 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_GHUB_BROADCAST:
             if (self->scene_cnt == 11)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
-              gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
-              gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
-              gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
-              gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[CC_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GAGENT_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[CC_CELL]), TRUE);
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
@@ -1191,7 +1209,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_GAUTH_RESPONSE:
             if (self->scene_cnt == 11)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>메시지 전달</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>메시지 전달</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
               enqueue_log_label (self, "GHUB: 메시지 전달");
               renew_log_label (self);
@@ -1208,7 +1227,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 14)
             {
               gtk_widget_hide (self->cover_popover);
-              gtk_widget_set_opacity (self->lsf_image, 0.3);
+              gtk_image_clear (self->lsf_image);
               self->scene = SCENE_POLICY_RELOAD;
               self->scene_cnt = SCENE_END;
             }
@@ -1283,7 +1302,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_POLICY_RELOAD:
             if (self->scene_cnt == 21)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>보안 정책 반영</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
               enqueue_log_label (self, "GHUB: 보안 정책 반영");
@@ -1297,13 +1317,15 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               if (self->scene == SCENE_GCTRL_KILL)
               {
-                gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 정지</span></b>");
+                gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
+                                    "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 정지</span></b>");
                 gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
                 enqueue_log_label (self, "GCTRL: 앱 정지");
               }
               else
               {
-                gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 실행</span></b>");
+                gtk_label_set_text (GTK_LABEL (self->message_label[GCTRL_CELL]),
+                                    "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 실행</span></b>");
                 gtk_label_set_use_markup (GTK_LABEL (self->message_label[GCTRL_CELL]), TRUE);
                 enqueue_log_label (self, "GCTRL: 앱 실행");
               }
@@ -1315,7 +1337,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_APP_REQUEST:
             if (self->scene_cnt == 21)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 인증 요청 확인</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[GAUTH_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 요청 확인</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAUTH_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAUTH_CELL]));
               enqueue_log_label (self, "GAUTH: 앱 인증 요청 확인");
@@ -1326,7 +1349,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
           case SCENE_GAUTH_RESPONSE:
             if (self->scene_cnt == 21)
             {
-              gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]), "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#006400'>앱 인증 결과 확인</span></b>");
+              gtk_label_set_text (GTK_LABEL (self->message_label[APPS_CELL]),
+                                  "<b><span font='12' font-weight='bold' background='#ffffff' foreground='#6495ed'>앱 인증 결과 확인</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[APPS_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[APPS_CELL]));
               enqueue_log_label (self, "APPS: 앱 인증 결과 확인");
@@ -1399,6 +1423,7 @@ static gboolean
 time_handler (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
+
   get_scene (self);
   scene_handler (self);
   //update_module_state (self, self->selected_cell);
@@ -1464,24 +1489,6 @@ cc_security_framework_panel_class_init (CcSecurityFrameworkPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcSecurityFrameworkPanel, module_info_box);
 }
 
-/*
-static gboolean
-notify_cb (gpointer data)
-{
-  CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (data);
-
-  GtkAllocation alloc;
-  gtk_widget_get_allocation (self->ghub_button, &alloc);
-
-  g_print ("alloc.x = %d\n", alloc.x);
-  g_print ("alloc.y = %d\n", alloc.y);
-  g_print ("alloc.width = %d\n", alloc.width);
-  g_print ("alloc.height = %d\n", alloc.height);
-
-  return FALSE;
-}
-*/
-
 static void
 cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
 {
@@ -1489,27 +1496,100 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   GtkWidget *event_box;
   PangoAttrList *pg_attr_list; 
   PangoAttribute *pg_attr;
-  GdkColor cover_color = { 0, 15000, 15000, 15000 };
+  GdkRGBA cover_color;
 
   g_resources_register (cc_security_framework_get_resource ());
 
   gtk_widget_init_template (GTK_WIDGET (self));
+  gdk_rgba_parse (&cover_color, "#000000");
 
   get_modules_state (self);
-  set_modules_opacity (self);
+  set_modules_opacity (self); 
 
   self->log_start = 0;
   self->log_end = -1;
   self->log_cnt = 0;
+
   self->selected_cell = -1;
   self->scene = SCENE_IDLE;
+  self->target_cell = APPS_CELL;
   set_scene_conf (self);
+
+  event_box = gtk_event_box_new ();
+  gtk_event_box_set_above_child (GTK_EVENT_BOX (event_box), FALSE);
+
+  self->popover[CC_CELL] = gtk_popover_new (self->control_center_image);
+  self->popover[GHUB_CELL] = gtk_popover_new (self->ghub_image);
+  self->popover[GAUTH_CELL] = gtk_popover_new (self->gauth_image);
+  self->popover[GCTRL_CELL] = gtk_popover_new (self->gcontroller_image);
+  self->popover[GAGENT_CELL] = gtk_popover_new (self->gagent_image);
+  self->popover[APPS_CELL] = gtk_popover_new (self->apps_image);
+  self->popover[GPMS_CELL] = gtk_popover_new (self->gpms_image);
 
   for (module = 0; module < CELL_NUM; module++)
   {
     self->menu[module] = gtk_menu_new ();
     set_menu_items (self, module);
+
+    self->message_label[module] = gtk_label_new ("");
+    gtk_widget_show (self->message_label[module]);
+    gtk_container_add (GTK_CONTAINER (self->popover[module]), self->message_label[module]);
+    gtk_popover_set_modal (GTK_POPOVER (self->popover[module]), FALSE);
   }
+
+  self->lsf_image = gtk_image_new ();
+  gtk_widget_set_size_request (self->lsf_image, -1, 45);
+  gtk_widget_set_margin_bottom (self->lsf_image, 90);
+  gtk_widget_set_vexpand (self->lsf_image, FALSE);
+  gtk_box_pack_start (GTK_BOX (self->module_info_box), self->lsf_image, FALSE, FALSE, 0);
+
+  self->log_label = gtk_label_new ("");
+  gtk_label_set_justify (GTK_LABEL (self->log_label), GTK_JUSTIFY_LEFT);
+  gtk_container_add (GTK_CONTAINER (event_box), self->log_label);
+  gtk_box_pack_start (GTK_BOX (self->module_info_box), event_box, FALSE, FALSE, 0);
+
+  pg_attr_list = pango_attr_list_new ();
+  pg_attr = pango_attr_size_new_absolute (12*PANGO_SCALE);
+  pango_attr_list_insert (pg_attr_list, pg_attr);
+  gtk_label_set_attributes (GTK_LABEL (self->log_label), pg_attr_list);
+  gtk_label_set_width_chars (GTK_LABEL (self->log_label), 30);
+  gtk_label_set_xalign (GTK_LABEL (self->log_label), 0);
+  gtk_label_set_yalign (GTK_LABEL (self->log_label), 0);
+
+  self->cover_label = gtk_label_new ("보안 앱 정책 설정");
+  pg_attr_list = pango_attr_list_new ();
+  pg_attr = pango_attr_foreground_new (65535, 65535, 65535);
+  pango_attr_list_insert (pg_attr_list, pg_attr);
+  pg_attr = pango_attr_size_new_absolute (45*PANGO_SCALE);
+  pango_attr_list_insert (pg_attr_list, pg_attr);
+  gtk_label_set_attributes (GTK_LABEL (self->cover_label), pg_attr_list);
+  gtk_widget_set_margin_top (self->cover_label, 130);
+
+  self->cover_sub_label = gtk_label_new ("시나리오를 시작합니다.");
+  pg_attr_list = pango_attr_list_new ();
+  pg_attr = pango_attr_foreground_new (65535, 65535, 65535);
+  pango_attr_list_insert (pg_attr_list, pg_attr);
+  pg_attr = pango_attr_size_new_absolute (20*PANGO_SCALE);
+  pango_attr_list_insert (pg_attr_list, pg_attr);
+  gtk_label_set_attributes (GTK_LABEL (self->cover_sub_label), pg_attr_list);
+  gtk_widget_set_margin_top (self->cover_sub_label, 20);
+
+  self->sound_wave = gtk_image_new ();
+  gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), SOUND_WAVE_GIF);
+  gtk_widget_set_margin_top (self->sound_wave, 70);
+
+  self->cover_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start (GTK_BOX (self->cover_box), self->cover_label, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (self->cover_box), self->cover_sub_label, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (self->cover_box), self->sound_wave, FALSE, FALSE, 0);
+
+  self->cover_popover = gtk_popover_new (self->lsf_image);
+  gtk_widget_set_size_request (self->cover_popover, 600, 450);
+  gtk_widget_override_background_color (self->cover_popover, GTK_STATE_FLAG_NORMAL, &cover_color);
+  gtk_container_add (GTK_CONTAINER (self->cover_popover), self->cover_box);
+  gtk_popover_set_modal (GTK_POPOVER (self->cover_popover), FALSE);
+
+  gtk_widget_show_all (self->module_info_box);
 
   g_signal_connect (G_OBJECT (self->darea_12),
                     "draw",
@@ -1555,83 +1635,10 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
                     "button-press-event",
                     G_CALLBACK (apps_cell_clicked),
                     self);
-
-  self->lsf_image = gtk_image_new ();
-  gtk_image_set_from_file (GTK_IMAGE (self->lsf_image), LSF_IMG);
-  gtk_widget_set_size_request (self->lsf_image, -1, 135);
-  gtk_widget_set_opacity (self->lsf_image, 0.3);
-  gtk_box_pack_start (GTK_BOX (self->module_info_box), self->lsf_image, FALSE, FALSE, 0);
-  gtk_widget_show (self->lsf_image);
-
-  event_box = gtk_event_box_new ();
-  gtk_event_box_set_above_child (GTK_EVENT_BOX (event_box), FALSE);
   g_signal_connect (G_OBJECT (event_box),
                     "button-press-event",
                     G_CALLBACK (log_label_clicked),
                     self);
-  self->log_label = gtk_label_new ("");
-  gtk_label_set_justify (GTK_LABEL (self->log_label), GTK_JUSTIFY_LEFT);
-  gtk_container_add (GTK_CONTAINER (event_box), self->log_label);
-  gtk_box_pack_start (GTK_BOX (self->module_info_box), event_box, FALSE, FALSE, 1);
-
-  pg_attr_list = pango_attr_list_new ();
-  pg_attr = pango_attr_size_new_absolute (12*PANGO_SCALE);
-  pango_attr_list_insert (pg_attr_list, pg_attr);
-  gtk_label_set_attributes (GTK_LABEL (self->log_label), pg_attr_list);
-  gtk_label_set_width_chars (GTK_LABEL (self->log_label), 30);
-  gtk_label_set_xalign (GTK_LABEL (self->log_label), 0);
-  gtk_label_set_yalign (GTK_LABEL (self->log_label), 0);
-
-  gtk_widget_show_all (self->module_info_box);
-
-  self->target_cell = APPS_CELL;
-
-  self->popover[CC_CELL] = gtk_popover_new (self->control_center_image);
-  self->popover[GHUB_CELL] = gtk_popover_new (self->ghub_image);
-  self->popover[GAUTH_CELL] = gtk_popover_new (self->gauth_image);
-  self->popover[GCTRL_CELL] = gtk_popover_new (self->gcontroller_image);
-  self->popover[GAGENT_CELL] = gtk_popover_new (self->gagent_image);
-  self->popover[APPS_CELL] = gtk_popover_new (self->apps_image);
-  self->popover[GPMS_CELL] = gtk_popover_new (self->gpms_image);
-  for (module = 0; module < CELL_NUM; module++)
-  {
-    self->message_label[module] = gtk_label_new ("label");
-    gtk_widget_show (self->message_label[module]);
-    gtk_container_add (GTK_CONTAINER (self->popover[module]), self->message_label[module]);
-    gtk_popover_set_modal (GTK_POPOVER (self->popover[module]), FALSE);
-  }
-
-  self->cover_popover = gtk_popover_new (self->lsf_image);
-  gtk_widget_set_size_request (self->cover_popover, 600, 450);
-
-  self->cover_label = gtk_label_new ("보안 앱 정책 설정");
-  self->cover_sub_label = gtk_label_new ("시나리오를 시작합니다.");
-  pg_attr_list = pango_attr_list_new ();
-  pg_attr = pango_attr_foreground_new (65535, 65535, 65535);
-  pango_attr_list_insert (pg_attr_list, pg_attr);
-  pg_attr = pango_attr_size_new_absolute (20*PANGO_SCALE);
-  pango_attr_list_insert (pg_attr_list, pg_attr);
-  gtk_label_set_attributes (GTK_LABEL (self->cover_sub_label), pg_attr_list);
-  gtk_widget_set_margin_top (self->cover_sub_label, 20);
-  pg_attr_list = pango_attr_list_new ();
-  pg_attr = pango_attr_foreground_new (65535, 65535, 65535);
-  pango_attr_list_insert (pg_attr_list, pg_attr);
-  pg_attr = pango_attr_size_new_absolute (45*PANGO_SCALE);
-  pango_attr_list_insert (pg_attr_list, pg_attr);
-  gtk_label_set_attributes (GTK_LABEL (self->cover_label), pg_attr_list);
-  gtk_widget_set_margin_top (self->cover_label, 130);
-  gtk_widget_modify_bg (self->cover_popover, GTK_STATE_FLAG_NORMAL, &cover_color);
-
-  self->cover_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-  //gtk_box_set_homogeneous (GTK_BOX (self->cover_box), TRUE);
-  self->sound_wave = gtk_image_new ();
-  gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), "images/sound-wave.gif");
-  gtk_widget_set_margin_top (self->sound_wave, 70);
-  gtk_box_pack_start (GTK_BOX (self->cover_box), self->cover_label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (self->cover_box), self->cover_sub_label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (self->cover_box), self->sound_wave, FALSE, FALSE, 0);
-  gtk_container_add (GTK_CONTAINER (self->cover_popover), self->cover_box);
-  gtk_popover_set_modal (GTK_POPOVER (self->cover_popover), FALSE);
 }
 
 GtkWidget *

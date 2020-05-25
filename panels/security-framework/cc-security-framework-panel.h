@@ -33,21 +33,19 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define VT                                  15
 #define HT                                  20
   
-#define SCENE_PRESENTING_CNT                12
-
 #define SCENE_GHUB_BROADCAST_GHUB_BLINKING   5
 
 #define SCENE_POLICY_RELOAD_GPMS_BLINKING    5
-#define SCENE_POLICY_RELOAD_GAGENT_BLINKING 16
+#define SCENE_POLICY_RELOAD_GAGENT_BLINKING 15
 
 #define SCENE_GCTRL_KILL_CC_BLINKING         5
-#define SCENE_GCTRL_KILL_GHUB_BLINKING      16
+#define SCENE_GCTRL_KILL_GHUB_BLINKING      15
 
 #define SCENE_APP_REQUEST_APP_BLINKING       5
-#define SCENE_APP_REQUEST_GHUB_BLINKING     16
+#define SCENE_APP_REQUEST_GHUB_BLINKING     15
 
 #define SCENE_GAUTH_RESPONSE_GAUTH_BLINKING  5
-#define SCENE_GAUTH_RESPONSE_GHUB_BLINKING  16
+#define SCENE_GAUTH_RESPONSE_GHUB_BLINKING  15
 
 #define SCENE_CNT                           27
 #define SCENE_END                           -1
@@ -68,7 +66,8 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GAGENT_IMG_SMALL "images/gagent-small-image.png"
 #define GPMS_IMG         "images/gpms-image.svg"
 #define GPMS_IMG_SMALL   "images/gpms-small-image.png"
-#define LSF_IMG          "images/lsf.svg"
+#define LSF_IMG          "images/lsf.png"
+#define SOUND_WAVE_GIF   "images/sound-wave.gif"
 
 enum
 {
