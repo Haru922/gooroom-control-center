@@ -5,20 +5,20 @@
     <property name="visible">True</property>
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkImage" id="gauth_image">
+      <?object class="GtkImage" id="gauth_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="pixbuf">images/gauth-image.svg</property>
-      </object>
-      <object class="GtkImage" id="gcontroller_image">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="pixbuf">images/gcontroller-image.svg</property>
       </object>
       <object class="GtkImage" id="ghub_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="pixbuf">images/ghub-image.svg</property>
+      </object?>
+      <object class="GtkImage" id="gcontroller_image">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="pixbuf">images/gcontroller-image.svg</property>
       </object>
       <object class="GtkImage" id="apps_image">
         <property name="visible">True</property>
@@ -29,6 +29,11 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="pixbuf">images/gagent-image.svg</property>
+      </object>
+      <object class="GtkImage" id="gpms_image">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="pixbuf">images/gpms-image.svg</property>
       </object>
       <object class="GtkBox" id="main_box">
         <property name="visible">True</property>
@@ -44,7 +49,7 @@
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="margin_top">75</property>
-            <child>
+            <?child>
               <object class="GtkButton" id="ghub_button">
                 <property name="label" translatable="yes">GHub</property>
                 <property name="visible">True</property>
@@ -75,7 +80,7 @@
                 <property name="left_attach">2</property>
                 <property name="top_attach">1</property>
               </packing>
-            </child>
+            </child?>
             <child>
               <object class="GtkButton" id="gcontroller_button">
                 <property name="label" translatable="yes">GController</property>
@@ -90,6 +95,22 @@
               <packing>
                 <property name="left_attach">2</property>
                 <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="gpms_button">
+                <property name="label" translatable="yes">GPMS</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="image">gpms_image</property>
+                <property name="relief">none</property>
+                <property name="image_position">top</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">6</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
@@ -160,6 +181,76 @@
               </packing>
             </child>
             <child>
+              <object class="GtkBox" id="ghub_section">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkImage" id="ghub_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">images/ghub-image.svg</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="ghub_label">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">GHub</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="gauth_section">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkImage" id="gauth_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">images/gauth-image.svg</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="gauth_label">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">GAuth</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <?child>
               <object class="GtkBox" id="gpms_section">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -193,7 +284,7 @@
                 <property name="left_attach">6</property>
                 <property name="top_attach">3</property>
               </packing>
-            </child>
+            </child?>
             <child>
               <object class="GtkDrawingArea" id="darea_10">
                 <property name="visible">True</property>

@@ -47,11 +47,17 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define SCENE_GAUTH_RESPONSE_GAUTH_BLINKING  5
 #define SCENE_GAUTH_RESPONSE_GHUB_BLINKING  15
 
-#define SCENE_CNT                           27
+#define STARTING_BLINK_CNT                   5
+#define ENDING_BLINK_CNT                    15
+#define MOVING_CNT                           6
+
+#define SCENE_CNT                           16
 #define SCENE_END                           -1
 
 #define REVERSE                              1
 #define LOG_BUF                              8 
+#define EVENTS_NUM                          10
+#define THR_NUM                              4
 
 #define CC_IMG           "images/control-center-image.svg"
 #define CC_IMG_SMALL     "images/control-center-small-image.png"
@@ -69,10 +75,20 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GPMS_IMG_SMALL   "images/gpms-small-image.png"
 #define LSF_IMG          "images/lsf.png"
 #define SOUND_WAVE_GIF   "images/sound-wave.gif"
+#define CC_DBUS_NAME     "kr.gooroom.cc"
+#define GHUB_DBUS_NAME   "kr.gooroom.ghub"
+#define GAUTH_DBUS_NAME  "kr.gooroom.gauth"
+#define GCTRL_DBUS_NAME  "kr.gooroom.gcontroller"
+#define GAGENT_DBUS_NAME "kr.gooroom.agent"
+#define GPMS_NAME        "gpms"
+
+#define GPMS_DOMAIN      "https://dev-c4i-gpms.gooroom.kr"
 
 enum
 {
   SCENE_IDLE,
+  SCENE_METHOD_CALL,
+  SCENE_METHOD_CALL_REV,
   SCENE_PRESENTING,
   SCENE_POLICY_RELOAD,
   SCENE_GHUB_BROADCAST,
@@ -115,6 +131,17 @@ enum
   COLOR_YELLOW,
   COLOR_BLACK,
   COLOR_NUM
+};
+
+enum
+{
+  SET_CONFIG,
+  UNSET_CONFIG,
+  LAUNCH_GAGENT,
+  KILL_GAGENT,
+  LAUNCH_APPS,
+  KILL_APPS,
+  NUM_DBUS_ARGS
 };
 
 GtkWidget *cc_security_framework_panel_new (void);

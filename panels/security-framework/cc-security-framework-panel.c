@@ -29,7 +29,7 @@
 struct _CcSecurityFrameworkPanel
 {
   CcPanel    parent_instance;
-  GThread   *thr[THR_NUM];
+  GThread   *thr;
   GtkWidget *ghub_section;
   GtkWidget *gauth_section;
   GtkWidget *gpms_button;
@@ -74,8 +74,8 @@ struct _CcSecurityFrameworkPanel
   gboolean   animating;
   guint      event_source_tag[EVENTS_NUM];
   gchar     *log_message[LOG_BUF];
+  FILE      *fp;
   gint       events;
-  gint       selected_cell;
   gint       scene;
   gint       scene_cnt;
   gint       target_cell;
@@ -91,7 +91,6 @@ G_DEFINE_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC_TYPE_PA
 static void do_drawing           (GtkWidget *, cairo_t *, gint, gint, gint, gint);
 static void menu_item_selected   (GtkWidget *, GdkEvent *, gpointer);
 static void set_line_color       (cairo_t *, gint);
-static void get_modules_state    (CcSecurityFrameworkPanel *);
 
 static void
 enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
@@ -139,7 +138,6 @@ draw_vertical_bar (GtkWidget *widget,
   cairo_line_to (cr, 48, 73);
   cairo_stroke (cr);
 }
-
 
 static void
 draw_conn_cc_ghub (GtkWidget *widget,
@@ -277,13 +275,17 @@ gpms_cell_clicked (GtkWidget      *widget,
                    GdkEventButton *event,
                    gpointer        user_data)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
-
-  self->selected_cell = GPMS_CELL;
+  pid_t pid;
+  char *argv[] = { "gooroom-browser", GPMS_DOMAIN, NULL };
 
   if (event->button == GDK_BUTTON_PRIMARY)
   {
-    g_print ("launch_gpms\n");
+    pid = fork ();
+    if (pid == 0)
+    {
+      execv ("/usr/bin/gooroom-browser", argv);
+      exit (EXIT_SUCCESS);
+    }
   }
 }
 
@@ -294,8 +296,6 @@ gctrl_cell_clicked (GtkWidget      *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   
-  self->selected_cell = GCTRL_CELL;
-
   if (event->button == GDK_BUTTON_PRIMARY)
   {
     gtk_menu_popup_at_pointer (GTK_MENU (self->menu[GCTRL_CELL]), NULL);
@@ -309,7 +309,6 @@ gagent_cell_clicked (GtkWidget      *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   
-  self->selected_cell = GAGENT_CELL;
 
   if (event->button == GDK_BUTTON_PRIMARY)
   {
@@ -324,8 +323,6 @@ apps_cell_clicked (GtkWidget      *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
-  self->selected_cell = APPS_CELL;
-
   if (event->button == GDK_BUTTON_PRIMARY)
   {
     gtk_menu_popup_at_pointer (GTK_MENU (self->menu[APPS_CELL]), NULL);
@@ -337,6 +334,7 @@ dbus_message_sender (gpointer arg_p)
 {
   int arg = GPOINTER_TO_INT (arg_p);
 
+  sleep (1);
   switch (arg)
   {
     case SET_CONFIG:
@@ -438,18 +436,6 @@ set_line_color (cairo_t *cr,
     default:
       cairo_set_source_rgba (cr, 0.64, 0.64, 0.64, 1);
       break;
-  }
-}
-
-
-static void
-get_modules_state (CcSecurityFrameworkPanel *self)
-{
-  int i;
-
-  for (i = 0; i < CELL_NUM; i++)
-  {
-    self->activated[i] = TRUE;
   }
 }
 
@@ -582,6 +568,21 @@ draw_lines (CcSecurityFrameworkPanel *self)
 }
 
 static void
+get_modules_state (gpointer *self_p)
+{
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) self_p;
+  int i;
+
+  sleep (1);
+  g_print ("DBUS: get_module state\n");
+  for (i = 0; i < CELL_NUM; i++)
+  {
+    self->activated[i] = TRUE;
+  }
+  set_modules_opacity (self);
+}
+
+static void
 do_drawing (GtkWidget *widget,
             cairo_t   *cr,
             gint       direction,
@@ -615,14 +616,14 @@ do_drawing (GtkWidget *widget,
   {
     case SCENE_METHOD_CALL:
       if (STARTING_BLINK_CNT < scene_cnt
-          && scene_cnt < STARTING_BLINK_CNT+6)
+          && scene_cnt < STARTING_BLINK_CNT+MOVING_CNT)
       {
         scope = TRUE;
       }
       break;
     case SCENE_METHOD_CALL_REV:
       if (STARTING_BLINK_CNT < scene_cnt
-          && scene_cnt < STARTING_BLINK_CNT+6)
+          && scene_cnt < STARTING_BLINK_CNT+MOVING_CNT)
       {
         scope = TRUE;
         reverse = 1;
@@ -630,7 +631,7 @@ do_drawing (GtkWidget *widget,
       break;
     case SCENE_GHUB_BROADCAST:
       if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
-          && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+6)
+          && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+MOVING_CNT)
       {
         scope = TRUE;
       }
@@ -655,7 +656,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_POLICY_RELOAD:
           if (SCENE_POLICY_RELOAD_GAGENT_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+6)
+              && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+MOVING_CNT)
           {
             scope = TRUE;
             reverse = 1;
@@ -671,7 +672,7 @@ do_drawing (GtkWidget *widget,
       {
         case SCENE_POLICY_RELOAD:
           if (SCENE_POLICY_RELOAD_GPMS_BLINKING < scene_cnt
-              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+6)
+              && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+MOVING_CNT)
           {
             scope = TRUE;
           }
@@ -699,7 +700,7 @@ do_drawing (GtkWidget *widget,
   {
     if (scope)
     {
-      if (!((scene_cnt+i+reverse)%2))
+      if (((scene_cnt+i+reverse)%2))
       {
         set_line_color (cr, color);
         cairo_arc (cr, xpos+(ht*i), ypos+(vt*i), RADIUS_SMALL, 0, 2*M_PI);
@@ -733,13 +734,14 @@ scene_handler (CcSecurityFrameworkPanel *self)
   if (self->scene == SCENE_IDLE)
   {
     self->animating = FALSE;
-    self->scene_cnt = 0;
+    //self->scene_cnt = 0;
   }
   else
   {
     switch (self->scene_cnt)
     {
       case 0:
+        self->animating = TRUE;
         switch (self->scene)
         {
           case SCENE_METHOD_CALL:
@@ -768,6 +770,9 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
               case GCTRL_CELL:
                 gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
+                break;
+              case GAGENT_CELL:
+                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
                 break;
               case APPS_CELL:
                 gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
@@ -800,6 +805,9 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
               case GCTRL_CELL:
                 gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
+                break;
+              case GAGENT_CELL:
+                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
                 break;
               case APPS_CELL:
                 gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
@@ -898,6 +906,9 @@ scene_handler (CcSecurityFrameworkPanel *self)
               case APPS_CELL:
                 gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
                 break;
+              case GPMS_CELL:
+                gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG);
+                break;
             }
             break;
           case SCENE_GHUB_BROADCAST:
@@ -959,21 +970,76 @@ scene_handler (CcSecurityFrameworkPanel *self)
         break;
       case 16: 
         self->scene_cnt = SCENE_END;
+        self->animating = FALSE;
+        self->scene = SCENE_IDLE;
         break;
     }
     self->scene_cnt = (self->scene_cnt+1)%SCENE_CNT;
   }
 }
 
+static int
+get_cell (const char *dbus_name)
+{
+  if (!g_strcmp0 (dbus_name, CC_DBUS_NAME))
+  {
+    return CC_CELL;
+  }
+  else if (!g_strcmp0 (dbus_name, GHUB_DBUS_NAME))
+  {
+    return GHUB_CELL;
+  }
+  else if (!g_strcmp0 (dbus_name, GAUTH_DBUS_NAME))
+  {
+    return GAUTH_CELL;
+  }
+  else if (!g_strcmp0 (dbus_name, GCTRL_DBUS_NAME))
+  {
+    return GCTRL_CELL;
+  }
+  else if (!g_strcmp0 (dbus_name, GAGENT_DBUS_NAME))
+  {
+    return GAGENT_CELL;
+  }
+  else if (!g_strcmp0 (dbus_name, GPMS_NAME))
+  {
+    return GPMS_CELL;
+  }
+}
+
 static void
 get_scene (CcSecurityFrameworkPanel *self)
 {
+  gchar **log_str;
+  gchar **args;
+  char buf[4096];
+
   if (self->scene == SCENE_IDLE) 
   {
+    log_str = g_strsplit (fgets (buf, 4096, self->fp), " ", 0);
+    args = g_strsplit (log_str[2], ",", 0);
+    self->from = get_cell (args[5]);
+    self->to = get_cell (args[6]);
+    g_print ("%d\n", self->to);
+
+    if (self->from == GHUB_CELL)
+    {
+      self->scene = SCENE_METHOD_CALL_REV;
+    }
+    else
+    {
+      self->scene = SCENE_METHOD_CALL;
+    }
     //self->scene = SCENE_PRESENTING;
-    self->scene = SCENE_METHOD_CALL;
-    self->from = GPMS_CELL;
-    self->to = GAGENT_CELL;
+  }
+
+  if (args)
+  {
+    g_strfreev (args);
+  }
+  if (log_str)
+  {
+    g_strfreev (log_str);
   }
 }
 
@@ -982,12 +1048,22 @@ time_handler (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
-  get_scene (self);
-  scene_handler (self);
   if (!self->animating)
   {
     set_modules_opacity (self);
+    get_scene (self);
   }
+  scene_handler (self);
+  return TRUE;
+}
+
+static gboolean
+time_handler2 (GObject *object)
+{
+  CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
+
+  self->thr = g_thread_new (NULL, get_modules_state, (gpointer) self);
+
   return TRUE;
 }
 
@@ -1012,6 +1088,12 @@ cc_security_framework_panel_dispose (GObject *object)
     security_framework_panel->events = 0;
   }
 
+  if (security_framework_panel->fp)
+  {
+    fclose (security_framework_panel->fp);
+    security_framework_panel->fp = NULL;
+  }
+
   G_OBJECT_CLASS (cc_security_framework_panel_parent_class)->dispose (object);
 }
 
@@ -1021,6 +1103,7 @@ cc_security_framework_panel_constructed (GObject *object)
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
   self->event_source_tag[self->events++] = g_timeout_add (250, (GSourceFunc) time_handler, (gpointer) object);
+  self->event_source_tag[self->events++] = g_timeout_add (1000, (GSourceFunc) time_handler2, (gpointer) object);
 }
 
 static void
@@ -1082,15 +1165,15 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gdk_rgba_parse (&application_layer_color, "rgba(255,0,0,0.5)");
 
   get_modules_state (self);
-  set_modules_opacity (self); 
 
+  self->fp = fopen ("/home/haru/haru_project/lsf/lsf_logger/logs/haru-2020-05-29.log", "r");
   self->events = 0;
   self->log_start = 0;
   self->log_end = -1;
   self->log_cnt = 0;
 
-  self->selected_cell = -1;
   self->scene = SCENE_IDLE;
+  draw_lines (self);
   self->target_cell = GAGENT_CELL;
 
   event_box = gtk_event_box_new ();
@@ -1150,7 +1233,6 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
                                 "<b><span font='12' font-weight='bold' foreground='#3a3c84'>  단말운용\n관리솔루션\n</span></b>");
   gtk_label_set_use_markup (GTK_LABEL (self->server_layer_label), TRUE);
 
-  draw_lines (self);
 
   gtk_widget_show_all (self->module_info_box);
 
