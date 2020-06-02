@@ -51,11 +51,11 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define ENDING_BLINK_CNT                    15
 #define MOVING_CNT                           6
 
-#define SCENE_CNT                           16
+#define SCENE_CNT                           17
 #define SCENE_END                           -1
 
 #define REVERSE                              1
-#define LOG_BUF                              8 
+#define LOG_BUF                              8
 #define EVENTS_NUM                          10
 #define THR_NUM                              4
 
@@ -80,6 +80,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GAUTH_DBUS_NAME  "kr.gooroom.gauth"
 #define GCTRL_DBUS_NAME  "kr.gooroom.gcontroller"
 #define GAGENT_DBUS_NAME "kr.gooroom.agent"
+#define APPS_DBUS_NAME   "kr.gooroom.testapp"
 #define GPMS_NAME        "gpms"
 
 #define GPMS_DOMAIN      "https://dev-c4i-gpms.gooroom.kr"
@@ -144,6 +145,21 @@ enum
   NUM_DBUS_ARGS
 };
 
+enum
+{
+  DMSG_SEQ,
+  DMSG_DIRECTION,
+  DMSG_METHOD,
+  DMSG_ABS,
+  DMSG_GLYPH,
+  DMSG_FROM,
+  DMSG_TO,
+  DMSG_FUNC,
+  DMSG_ERR,
+  DMSG_PAYLOAD,
+  DMSG_NUM
+};
+  
 GtkWidget *cc_security_framework_panel_new (void);
 
 G_END_DECLS
