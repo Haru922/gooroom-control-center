@@ -23,7 +23,7 @@
       <object class="GtkImage" id="apps_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">images/apps-image.svg</property>
+        <property name="pixbuf">images/apps-image.png</property>
       </object>
       <object class="GtkImage" id="gagent_image">
         <property name="visible">True</property>
@@ -115,7 +115,7 @@
             </child>
             <child>
               <object class="GtkButton" id="apps_button">
-                <property name="label" translatable="yes">Apps</property>
+                <property name="label" translatable="yes">AhnLab V3</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

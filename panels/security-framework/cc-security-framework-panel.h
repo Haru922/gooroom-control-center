@@ -18,6 +18,11 @@
 #pragma once
 
 #include <shell/cc-panel.h> 
+#include <lsf/lsf-main.h>
+#include <lsf/lsf-util.h>
+#include <lsf/lsf-auth.h>
+#include <lsf/lsf-dbus.h>
+
 G_BEGIN_DECLS
 
 #define CC_TYPE_SECURITY_FRAMEWORK_PANEL (cc_security_framework_panel_get_type ())
@@ -67,7 +72,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GAUTH_IMG_SMALL  "images/gauth-small-image.png"
 #define GCTRL_IMG        "images/gcontroller-image.svg"
 #define GCTRL_IMG_SMALL  "images/gcontroller-small-image.png"
-#define APPS_IMG         "images/apps-image.svg"
+#define APPS_IMG         "images/apps-image.png"
 #define APPS_IMG_SMALL   "images/apps-small-image.png"
 #define GAGENT_IMG       "images/gagent-image.svg"
 #define GAGENT_IMG_SMALL "images/gagent-small-image.png"
@@ -75,7 +80,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GPMS_IMG_SMALL   "images/gpms-small-image.png"
 #define LSF_IMG          "images/lsf.png"
 #define SOUND_WAVE_GIF   "images/sound-wave.gif"
-#define CC_DBUS_NAME     "kr.gooroom.cc"
+#define CC_DBUS_NAME     "kr.gooroom.controlcenter"
 #define GHUB_DBUS_NAME   "kr.gooroom.ghub"
 #define GAUTH_DBUS_NAME  "kr.gooroom.gauth"
 #define GCTRL_DBUS_NAME  "kr.gooroom.gcontroller"
@@ -84,6 +89,11 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GPMS_NAME        "gpms"
 
 #define GPMS_DOMAIN      "https://dev-c4i-gpms.gooroom.kr"
+#define V3_DOMAIN        "http://localhost:88"
+
+#define PASS_PHRASE               "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
+gchar *lsf_panel_symm_key;
+gchar *lsf_panel_access_token;
 
 enum
 {
@@ -111,6 +121,10 @@ enum
   GPMS_CELL,
   CELL_NUM
 };
+
+char *module_name[CELL_NUM] = { "CC", "GHUB", "GAUTH",
+                                "GCTRL", "GAGENT", "APPS",
+                                "GPMS" };
 
 enum
 {
@@ -142,6 +156,7 @@ enum
   KILL_GAGENT,
   LAUNCH_APPS,
   KILL_APPS,
+  GET_STATUS,
   NUM_DBUS_ARGS
 };
 

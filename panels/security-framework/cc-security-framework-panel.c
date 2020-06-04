@@ -25,7 +25,6 @@
 #include "cc-security-framework-resources.h"
 
 #define SECURITY_FRAMEWORK_SCHEMA "org.gnome.desktop.security-framework"
-#define PASS_PHRASE               "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
 
 struct _CcSecurityFrameworkPanel
 {
@@ -72,10 +71,14 @@ struct _CcSecurityFrameworkPanel
   GtkWidget *cover_label;
   GtkWidget *cover_sub_label;
   GtkWidget *cover_box;
+  GtkWidget *full_log_label;
+  GtkWidget *log_window;
+  GtkWidget *log_scrolled_window;
   gboolean   activated[CELL_NUM];
   gboolean   animating;
   guint      event_source_tag[EVENTS_NUM];
   gchar     *log_message[LOG_BUF];
+  gchar     *full_log;
   gchar     *from_log;
   gchar     *to_log;
   FILE      *fp;
@@ -97,8 +100,28 @@ static void menu_item_selected   (GtkWidget *, GdkEvent *, gpointer);
 static void set_line_color       (cairo_t *, gint);
 
 static void
+renew_log_label (CcSecurityFrameworkPanel *self)
+{
+  int i;
+  gchar *logs = "";
+
+  for (i = 0; i != self->log_cnt; i++)
+  {
+    logs = g_strjoin ("\t", logs, self->log_message[((self->log_start)+i)%LOG_BUF], "\n", NULL);
+  }
+
+  gtk_label_set_text (GTK_LABEL (self->log_label), logs);
+}
+
+static void
 enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
 {
+  if (new_log_message == NULL)
+  {
+    return;
+  }
+
+  self->full_log = g_strjoin ("\n", self->full_log, new_log_message, NULL);
   self->log_end = (self->log_end+1)%LOG_BUF;
 
   if (self->log_cnt == LOG_BUF)
@@ -111,20 +134,7 @@ enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
     self->log_cnt++;
   }
   self->log_message[self->log_end] = g_strdup (new_log_message);
-}
-
-static void
-renew_log_label (CcSecurityFrameworkPanel *self)
-{
-  int i;
-  gchar *logs = "";
-
-  for (i = 0; i != self->log_cnt; i++)
-  {
-    logs = g_strjoin ("\t", logs, self->log_message[((self->log_start)+i)%LOG_BUF], "\n", NULL);
-  }
-
-  gtk_label_set_text (GTK_LABEL (self->log_label), logs);
+  renew_log_label (self);
 }
 
 static void
@@ -266,11 +276,17 @@ log_label_clicked (GtkWidget      *widget,
 
   if (event->type == GDK_2BUTTON_PRESS)
   {
-    GtkWidget* log_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title (GTK_WINDOW (log_window), "GHub Log");
+    GtkWidget *log_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+    GtkWidget *full_log_label = gtk_label_new ("");
+    gtk_label_set_text (GTK_LABEL (full_log_label), self->full_log);
+    gtk_container_add (GTK_CONTAINER (scrolled_window), full_log_label);
+    gtk_container_add (GTK_CONTAINER (log_window), scrolled_window);
+    gtk_window_set_title (GTK_WINDOW (log_window), "Log History");
     gtk_window_set_default_size (GTK_WINDOW (log_window), 400, 400);
     gtk_window_set_position (GTK_WINDOW (log_window), GTK_WIN_POS_CENTER_ALWAYS);
-    gtk_widget_show (log_window);
+
+    gtk_widget_show_all (log_window);
   }
 }
 
@@ -300,7 +316,7 @@ gctrl_cell_clicked (GtkWidget      *widget,
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   
-  if (event->button == GDK_BUTTON_PRIMARY)
+  if (event->button == GDK_BUTTON_SECONDARY)
   {
     gtk_menu_popup_at_pointer (GTK_MENU (self->menu[GCTRL_CELL]), NULL);
   }
@@ -314,7 +330,7 @@ gagent_cell_clicked (GtkWidget      *widget,
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   
 
-  if (event->button == GDK_BUTTON_PRIMARY)
+  if (event->button == GDK_BUTTON_SECONDARY)
   {
     gtk_menu_popup_at_pointer (GTK_MENU (self->menu[GAGENT_CELL]), NULL);
   }
@@ -326,65 +342,94 @@ apps_cell_clicked (GtkWidget      *widget,
                    gpointer        user_data)
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
+  pid_t pid;
+  char *argv[] = { "gooroom-browser", V3_DOMAIN, NULL };
 
   if (event->button == GDK_BUTTON_PRIMARY)
+  {
+    pid = fork ();
+    if (pid == 0)
+    {
+      execv ("/usr/bin/gooroom-browser", argv);
+      exit (EXIT_SUCCESS);
+    }
+  }
+  if (event->button == GDK_BUTTON_SECONDARY)
   {
     gtk_menu_popup_at_pointer (GTK_MENU (self->menu[APPS_CELL]), NULL);
   }
 }
 
-static void
+static gchar *
 dbus_message_sender (gpointer arg_p)
 {
   int arg = GPOINTER_TO_INT (arg_p);
   GVariant *ret;
-  //GDBusMessage *ret;
-  //char ret_str[4096];
-  gchar *ret_str;
+  char *func;
+  char *param;
+  char *message_fmt = "{\
+                       \"to\": \"%s\",\
+                       \"from\": \"%s\",\
+                       \"access_token\": \"%s\",\
+                       \"function\": \"%s\",\
+                       \"params\": {%s}}";
+
+  char *req_msg = malloc (4096);
+  memset (req_msg, 0, 4096);
+  char *response = NULL;
   GDBusConnection *conn = NULL;
   GDBusProxy *dbus_proxy = NULL;
+
   conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
   switch (arg)
   {
     case SET_CONFIG:
-      g_print ("DBUS: set_config\n");
+      g_print ("set_config\n");
+      func = "setsettings";
+      param = "\"policy\":[{\
+               \"dbus_name\": \"kr.gooroom.gcontroller\",\
+               \"abs_path\": \"/usr/bin/gcontroller\",\
+               \"settings\": {\
+               \"topology_on\": \"true\"}}]";
       break;
     case UNSET_CONFIG:
-      g_print ("DBUS: unset_config\n");
+      g_print ("unset_config\n");
+      func = "setsettings";
+      param = "\"policy\":[{\
+               \"dbus_name\": \"kr.gooroom.gcontroller\",\
+               \"abs_path\": \"/usr/bin/gcontroller\",\
+               \"settings\": {\
+               \"topology_on\": \"false\"}}]";
       break;
     case LAUNCH_GAGENT:
-      g_print ("DBUS: launch_gagent\n");
+      func = "start";
+      param = "\"targets\": \"kr.gooroom.agent\"";
       break;
     case KILL_GAGENT:
-      g_print ("DBUS: kill_gagent\n");
+      func = "stop";
+      param = "\"targets\": \"kr.gooroom.agent\"";
       break;
     case LAUNCH_APPS:
-      g_print ("DBUS: launch_apps\n");
-
-      dbus_proxy = g_dbus_proxy_new_sync (conn,
-                                          G_DBUS_PROXY_FLAGS_NONE,
-                                          NULL,
-                                          "kr.gooroom.bhsdGHub",
-                                          "/kr/gooroom/bhsdGHubObject",
-                                          "kr.gooroom.bhsdGHubInterface",
-                                          NULL,
-                                          NULL);
-      ret = g_dbus_proxy_call_sync (dbus_proxy,
-                                    "EXECUTE",
-                                    NULL,
-                                    G_DBUS_CALL_FLAGS_NONE,
-                                    -1,
-                                    NULL,
-                                    NULL);
-      g_variant_get (ret, "(s)", &ret_str); // TODO
-      g_print ("%s\n", ret_str);
+      func = "start";
+      param = "\"targets\": \"kr.gooroom.testapp\"";
       break;
     case KILL_APPS:
-      g_print ("DBUS: kill_apps\n");
+      func = "stop";
+      param = "\"targets\": \"kr.gooroom.testapp\"";
+      break;
+    case GET_STATUS:
+      func = "app_status";
+      param = "\"targets\": \"all\"";
       break;
   }
+  snprintf (req_msg, 4096, message_fmt, "kr.gooroom.gcontroller", CC_DBUS_NAME, lsf_panel_access_token, func, param);
+  lsf_send_message (lsf_panel_symm_key, req_msg, &response);
+  g_print ("%s\n", response);
 
+  free (req_msg);
+  g_object_unref (conn);
+  return response;
 }
 
 static void
@@ -395,7 +440,7 @@ gctrl_menu_handler (GtkWidget *widget,
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
   GThread *thr;
 
-  if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget))) 
+  if (!g_strcmp0 (selection, "On")) 
   {
     thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (SET_CONFIG));
   }
@@ -469,14 +514,14 @@ set_line_color (cairo_t *cr,
 }
 
 static void
-set_menu_items (CcSecurityFrameworkPanel *object,
+set_menu_items (CcSecurityFrameworkPanel *self,
                 gint                      module)
 {
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) object;
   GtkWidget *menu;
   GtkWidget *sub_menu;
   GtkWidget *menu_item;
-  GSList *conf_group = NULL;
+  GtkRadioMenuItem *last_item = NULL;
+  GList *conf_group = NULL;
 
   if (module == GCTRL_CELL)
   {
@@ -486,12 +531,13 @@ set_menu_items (CcSecurityFrameworkPanel *object,
     sub_menu = gtk_menu_new ();
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), sub_menu);
     menu_item = gtk_radio_menu_item_new_with_label (conf_group, "On");
-    conf_group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (menu_item));
     g_signal_connect (G_OBJECT (menu_item),
                       "activate",
                       G_CALLBACK (gctrl_menu_handler),
                       self);
     gtk_menu_attach (GTK_MENU (sub_menu), menu_item, 0, 1, 0, 1);
+    conf_group = gtk_radio_menu_item_get_group (menu_item);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menu_item), TRUE);
     menu_item = gtk_radio_menu_item_new_with_label (conf_group, "Off");
     g_signal_connect (G_OBJECT (menu_item),
                       "activate",
@@ -600,10 +646,10 @@ static void
 get_modules_state (gpointer *self_p)
 {
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) self_p;
+  GThread *thr;
   int i;
 
-  sleep (1);
-  g_print ("DBUS: get_module state\n");
+  thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
   for (i = 0; i < CELL_NUM; i++)
   {
     self->activated[i] = TRUE;
@@ -787,22 +833,19 @@ scene_handler (CcSecurityFrameworkPanel *self)
             gtk_label_set_text (GTK_LABEL (self->message_label[GPMS_CELL]),
                                 "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GPMS_CELL]), TRUE);
-            enqueue_log_label (self, "GPMS: 보안 정책 변경");
             gtk_popover_popup (GTK_POPOVER (self->popover[GPMS_CELL]));
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
-            enqueue_log_label (self, self->from_log);
             break;
           case SCENE_GHUB_BROADCAST:
             gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
                                 "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
             gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
-            enqueue_log_label (self, "GHUB: 보안 정책 변경 전달");
             break;
         }
-        renew_log_label (self);
+        enqueue_log_label (self, self->from_log);
         break;
       case 1: case 3: case 5:
         switch (self->scene)
@@ -958,8 +1001,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
                                   "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAGENT_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAGENT_CELL]));
-              enqueue_log_label (self, "GAGENT: 보안 정책 변경 반영");
-              renew_log_label (self);
             }
             gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
             break;
@@ -968,7 +1009,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
             if (self->scene_cnt == 11)
             {
               enqueue_log_label (self, self->to_log);
-              renew_log_label (self);
             }
             switch (self->to)
             {
@@ -1014,10 +1054,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
                                   "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 반영</span></b>");
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[APPS_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[APPS_CELL]));
-              enqueue_log_label (self, "CC: 보안 정책 반영");
-              enqueue_log_label (self, "GAUTH: 보안 정책 반영");
-              enqueue_log_label (self, "GCTRL: 보안 정책 반영");
-              enqueue_log_label (self, "APPS: 보안 정책 반영");
             }
             gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG);
             gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG);
@@ -1025,7 +1061,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
             gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
             break;
         }
-        renew_log_label (self);
         break;
       case 12: case 14:
         switch (self->scene)
@@ -1142,43 +1177,6 @@ get_cell (const char *dbus_name)
   }
 }
 
-static gchar *
-get_module_name (int cell)
-{
-  if (cell == CC_CELL)
-  {
-    return "Control Center";
-  }
-  else if (cell == GHUB_CELL)
-  {
-    return "GHUB";
-  }
-  else if (cell == GAUTH_CELL)
-  {
-    return "GAUTH";
-  }
-  else if (cell == GCTRL_CELL)
-  {
-    return "GCTRL";
-  }
-  else if (cell == GAGENT_CELL)
-  {
-    return "GAGENT";
-  }
-  else if (cell == APPS_CELL)
-  {
-    return "APPS";
-  }
-  else if (cell == GPMS_CELL)
-  {
-    return "GPMS";
-  }
-  else
-  {
-    return "";
-  }
-}
-
 static void
 get_scene (CcSecurityFrameworkPanel *self)
 {
@@ -1193,20 +1191,14 @@ get_scene (CcSecurityFrameworkPanel *self)
     args = g_strsplit (log_str[2], ",", 0);
     self->from = get_cell (args[DMSG_FROM]);
     self->to = get_cell (args[DMSG_TO]);
-    g_print ("sequence_num: %s\n", args[DMSG_SEQ]);
-    g_print ("method: %s\n", args[DMSG_METHOD]);
-    g_print ("glyph: %s\n", args[DMSG_GLYPH]);
-    g_print ("func: %s\n", args[DMSG_FUNC]);
-    g_print ("from: %d\n", self->from);
-    g_print ("to: %d\n", self->to);
+    self->from_log = g_strconcat (module_name[self->from], "\t-->\t", module_name[self->to], "\t", args[DMSG_GLYPH], " , ", args[DMSG_FUNC], NULL);
 
-    if (!g_strcmp0 (args[DMSG_GLYPH], "O"))
+    if (!g_strcmp0 (args[DMSG_GLYPH], "O") && self->from == GAGENT_CELL && self->to == GHUB_CELL)
     {
       self->scene = SCENE_PRESENTING;
     }
     else 
     {
-      self->from_log = g_strconcat (get_module_name (self->from), ": ", args[DMSG_METHOD], NULL);
       if (self->from == GHUB_CELL)
       {
         self->scene = SCENE_METHOD_CALL_REV;
@@ -1287,8 +1279,8 @@ cc_security_framework_panel_constructed (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
-  self->event_source_tag[self->events++] = g_timeout_add (10, (GSourceFunc) time_handler, (gpointer) object);
-  self->event_source_tag[self->events++] = g_timeout_add (1000, (GSourceFunc) time_handler2, (gpointer) object);
+  self->event_source_tag[self->events++] = g_timeout_add (100, (GSourceFunc) time_handler, (gpointer) object);
+  //self->event_source_tag[self->events++] = g_timeout_add (1000, (GSourceFunc) time_handler2, (gpointer) object);
 }
 
 static void
@@ -1336,22 +1328,29 @@ cc_security_framework_panel_class_init (CcSecurityFrameworkPanelClass *klass)
 static void
 cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
 {
+  lsf_user_data_t app_data;
   int module;
   GtkWidget *event_box;
   PangoAttrList *pg_attr_list; 
   PangoAttribute *pg_attr;
   GdkRGBA cover_color;
   GdkRGBA application_layer_color;
+  int r;
 
   g_resources_register (cc_security_framework_get_resource ());
 
   gtk_widget_init_template (GTK_WIDGET (self));
+
+  r = lsf_auth (&app_data, PASS_PHRASE);
+  lsf_panel_symm_key = g_strdup (app_data.symm_key);
+  lsf_panel_access_token = g_strdup (app_data.access_token);
+
   gdk_rgba_parse (&cover_color, "#000000");
   gdk_rgba_parse (&application_layer_color, "rgba(255,0,0,0.5)");
 
   get_modules_state (self);
 
-  self->fp = fopen ("/home/haru/haru_project/lsf/lsf_logger/logs/message-2020-06-02.log", "r");
+  self->fp = fopen ("/var/log/lsf/message-2020-06-04.log", "r");
   self->events = 0;
   self->log_start = 0;
   self->log_end = -1;
@@ -1529,7 +1528,6 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
 
   gtk_widget_show_all (self->module_info_box);
   // DELETE_END
-
 }
 
 GtkWidget *
@@ -1538,3 +1536,29 @@ cc_security_framework_panel_new (void)
   return g_object_new (CC_TYPE_SECURITY_FRAMEWORK_PANEL,
                        NULL);
 }
+
+/*
+lsf_user_data_t app_data;
+memset (&app_data, 0x00, sizeof (lsf_user_data_t));
+
+r = lsf_auth (&app_data, PASS_PHRASE);
+if (r != LSF_AUTH_STAT_OK) {
+  fprintf (stdout, "auth failed: %d\n", r);
+  return -1;
+}
+
+char *message_fmt = "{\
+                     \"to\": \"%s\",\
+                     \"from\": \"%s\",\
+                     \"access_token\": \"%s\",\
+                     \"function\": \"%s\",\
+                     \"params\": { }}";
+char *req_msg = malloc (4096);
+memset (req_msg, 0, 4096);
+snprintf (req_msg, 4096, message_fmt, "kr.gooroom.ghub", app_data.dbus_name, app_data.access_token, "getsettings");
+
+char *response = NULL;
+lsf_send_message (app_data.symm_key, req_msg, &response);
+fprintf (stdout, "Received response message: \n%s\n", response);
+*/
+
