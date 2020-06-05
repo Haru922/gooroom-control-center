@@ -382,8 +382,11 @@ dbus_message_sender (gpointer arg_p)
 
   switch (arg)
   {
+    case GET_CONFIG:
+      func = "getsettings";
+      param = "";
+      break;
     case SET_CONFIG:
-      g_print ("set_config\n");
       func = "setsettings";
       param = "\"policy\":[{\
                \"dbus_name\": \"kr.gooroom.gcontroller\",\
@@ -392,7 +395,6 @@ dbus_message_sender (gpointer arg_p)
                \"topology_on\": \"true\"}}]";
       break;
     case UNSET_CONFIG:
-      g_print ("unset_config\n");
       func = "setsettings";
       param = "\"policy\":[{\
                \"dbus_name\": \"kr.gooroom.gcontroller\",\
@@ -436,13 +438,16 @@ gctrl_menu_handler (GtkWidget *widget,
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
   GThread *thr;
 
-  if (!g_strcmp0 (selection, "On")) 
+  if (gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (widget)))
   {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (SET_CONFIG));
-  }
-  else if (!g_strcmp0 (selection, "Off"))
-  {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (UNSET_CONFIG));
+    if (!g_strcmp0 (selection, "On")) 
+    {
+      thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (SET_CONFIG));
+    }
+    else if (!g_strcmp0 (selection, "Off"))
+    {
+      thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (UNSET_CONFIG));
+    }
   }
 }
 
@@ -456,11 +461,11 @@ apps_menu_handler (GtkWidget *widget,
 
   if (!g_strcmp0 (selection, "Kill"))
   {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (KILL_APPS));
+    thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (KILL_APPS));
   }
   else if (!g_strcmp0 (selection, "Launch"))
   {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (LAUNCH_APPS));
+    thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (LAUNCH_APPS));
   }
 }
 
@@ -474,11 +479,11 @@ gagent_menu_handler (GtkWidget *widget,
 
   if (!g_strcmp0 (selection, "Kill"))
   {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (KILL_GAGENT));
+    thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (KILL_GAGENT));
   }
   else if (!g_strcmp0 (selection, "Launch"))
   {
-    thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (LAUNCH_GAGENT));
+    thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (LAUNCH_GAGENT));
   }
 }
 
@@ -517,7 +522,7 @@ set_menu_items (CcSecurityFrameworkPanel *self,
   GtkWidget *sub_menu;
   GtkWidget *menu_item;
   GtkRadioMenuItem *last_item = NULL;
-  GList *conf_group = NULL;
+  GSList *conf_group = NULL;
 
   if (module == GCTRL_CELL)
   {
@@ -528,15 +533,17 @@ set_menu_items (CcSecurityFrameworkPanel *self,
     gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), sub_menu);
     menu_item = gtk_radio_menu_item_new_with_label (conf_group, "On");
     g_signal_connect (G_OBJECT (menu_item),
-                      "activate",
+                      "toggled",
                       G_CALLBACK (gctrl_menu_handler),
                       self);
     gtk_menu_attach (GTK_MENU (sub_menu), menu_item, 0, 1, 0, 1);
-    conf_group = gtk_radio_menu_item_get_group (menu_item);
+    conf_group = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (menu_item));
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menu_item), TRUE);
+    menu_item = gtk_radio_menu_item_new_with_label (NULL, "Off");
     menu_item = gtk_radio_menu_item_new_with_label (conf_group, "Off");
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menu_item), TRUE);
     g_signal_connect (G_OBJECT (menu_item),
-                      "activate",
+                      "toggled",
                       G_CALLBACK (gctrl_menu_handler),
                       self);
     gtk_menu_attach (GTK_MENU (sub_menu), menu_item, 0, 1, 1, 2);
@@ -1225,10 +1232,10 @@ scene_presenter (GObject *object)
 }
 
 static void 
-resp_parser (char *resp, char value[][30])
+resp_parser (char *resp, char value[][JSON_VALUE_BUF])
 {
   int i, j, k, l, m, n;
-  char field[30];
+  char field[JSON_VALUE_BUF];
 
   n = 0;
   for (i = 0; resp[i] != '\0'; i++)
@@ -1260,32 +1267,34 @@ resp_parser (char *resp, char value[][30])
 }
 
 static gboolean
-modules_state_updater (GObject *object)
+modules_state_updater (CcSecurityFrameworkPanel *self)
 {
-  CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
   GThread *thr;
   char *ret;
-  char value[14][30];
+  char value[14][JSON_VALUE_BUF];
   int i;
   int target_cell;
 
-  thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
+  thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
   ret = (char *) g_thread_join (thr);
-  resp_parser (ret, value);
-
-  for (i = 0; i < GCTRL_STATUS_RET_NUM*2; i+=2)
+  if (ret != NULL)
   {
-    target_cell = get_cell (value[i]);
+    resp_parser (ret, value);
 
-    if (target_cell != -1)
+    for (i = 0; i < GCTRL_STATUS_RET_NUM*2; i+=2)
     {
-      if (!g_strcmp0 (value[i+1], "running"))
+      target_cell = get_cell (value[i]);
+
+      if (target_cell != -1)
       {
-        self->activated[target_cell] = TRUE;
-      }
-      else
-      {
-        self->activated[target_cell] = FALSE;
+        if (!g_strcmp0 (value[i+1], "running"))
+        {
+          self->activated[target_cell] = TRUE;
+        }
+        else
+        {
+          self->activated[target_cell] = FALSE;
+        }
       }
     }
   }
@@ -1387,8 +1396,12 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gtk_widget_init_template (GTK_WIDGET (self));
 
   r = lsf_auth (&app_data, PASS_PHRASE);
-  lsf_panel_symm_key = g_strdup (app_data.symm_key);
-  lsf_panel_access_token = g_strdup (app_data.access_token);
+  if (r == LSF_AUTH_STAT_OK)
+  {
+    lsf_panel_symm_key = g_strdup (app_data.symm_key);
+    lsf_panel_access_token = g_strdup (app_data.access_token);
+    dbus_message_sender (GINT_TO_POINTER (GET_CONFIG));
+  }
 
   local_time = g_date_time_new_now_local ();
   self->tailing_file = g_strconcat ("/var/log/lsf/message-", g_date_time_format (local_time, "%F"), ".log", NULL);

@@ -60,6 +60,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define SCENE_END                           -1
 
 #define DEFAULT_BUF_SIZE                  4096
+#define JSON_VALUE_BUF                      30
 
 #define REVERSE                              1
 #define LOG_BUF                              8
@@ -93,10 +94,9 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GPMS_DOMAIN      "https://dev-c4i-gpms.gooroom.kr"
 #define V3_DOMAIN        "http://localhost:88"
 
-#define PASS_PHRASE               "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
+#define PASS_PHRASE      "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
 gchar *lsf_panel_symm_key;
 gchar *lsf_panel_access_token;
-GDBusConnection *lsf_conn;
 
 enum
 {
@@ -153,6 +153,7 @@ enum
 
 enum
 {
+  GET_CONFIG,
   SET_CONFIG,
   UNSET_CONFIG,
   LAUNCH_GAGENT,
