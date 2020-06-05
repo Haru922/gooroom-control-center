@@ -29,8 +29,6 @@
 struct _CcSecurityFrameworkPanel
 {
   CcPanel    parent_instance;
-  GThread   *thr;
-  GDBusProxy *dbus_proxy;
   GtkWidget *ghub_section;
   GtkWidget *gauth_section;
   GtkWidget *gpms_button;
@@ -80,8 +78,9 @@ struct _CcSecurityFrameworkPanel
   gchar     *log_message[LOG_BUF];
   gchar     *full_log;
   gchar     *from_log;
-  gchar     *to_log;
+  gchar     *tailing_file;
   FILE      *fp;
+  long       fpos;
   gint       events;
   gint       scene;
   gint       scene_cnt;
@@ -121,7 +120,7 @@ enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
     return;
   }
 
-  self->full_log = g_strjoin ("\n", self->full_log, new_log_message, NULL);
+  self->full_log = g_strjoin ("\t", self->full_log, new_log_message, "\n", NULL);
   self->log_end = (self->log_end+1)%LOG_BUF;
 
   if (self->log_cnt == LOG_BUF)
@@ -279,6 +278,9 @@ log_label_clicked (GtkWidget      *widget,
     GtkWidget *log_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     GtkWidget *scrolled_window = gtk_scrolled_window_new (NULL, NULL);
     GtkWidget *full_log_label = gtk_label_new ("");
+    gtk_label_set_width_chars (GTK_LABEL (self->log_label), 30);
+    gtk_label_set_xalign (GTK_LABEL (full_log_label), 0);
+    gtk_label_set_yalign (GTK_LABEL (full_log_label), 0);
     gtk_label_set_text (GTK_LABEL (full_log_label), self->full_log);
     gtk_container_add (GTK_CONTAINER (scrolled_window), full_log_label);
     gtk_container_add (GTK_CONTAINER (log_window), scrolled_window);
@@ -374,13 +376,9 @@ dbus_message_sender (gpointer arg_p)
                        \"function\": \"%s\",\
                        \"params\": {%s}}";
 
-  char *req_msg = malloc (4096);
-  memset (req_msg, 0, 4096);
+  char *req_msg = malloc (DEFAULT_BUF_SIZE);
+  memset (req_msg, 0, DEFAULT_BUF_SIZE);
   char *response = NULL;
-  GDBusConnection *conn = NULL;
-  GDBusProxy *dbus_proxy = NULL;
-
-  conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
 
   switch (arg)
   {
@@ -423,12 +421,10 @@ dbus_message_sender (gpointer arg_p)
       param = "\"targets\": \"all\"";
       break;
   }
-  snprintf (req_msg, 4096, message_fmt, "kr.gooroom.gcontroller", CC_DBUS_NAME, lsf_panel_access_token, func, param);
+  snprintf (req_msg, DEFAULT_BUF_SIZE, message_fmt, "kr.gooroom.gcontroller", CC_DBUS_NAME, lsf_panel_access_token, func, param);
   lsf_send_message (lsf_panel_symm_key, req_msg, &response);
-  g_print ("%s\n", response);
 
   free (req_msg);
-  g_object_unref (conn);
   return response;
 }
 
@@ -643,21 +639,6 @@ draw_lines (CcSecurityFrameworkPanel *self)
 }
 
 static void
-get_modules_state (gpointer *self_p)
-{
-  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) self_p;
-  GThread *thr;
-  int i;
-
-  thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
-  for (i = 0; i < CELL_NUM; i++)
-  {
-    self->activated[i] = TRUE;
-  }
-  set_modules_opacity (self);
-}
-
-static void
 do_drawing (GtkWidget *widget,
             cairo_t   *cr,
             gint       direction,
@@ -808,7 +789,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
 {
   if (self->scene == SCENE_IDLE)
   {
-    g_print ("IDLE\n");
     self->animating = FALSE;
     self->scene_cnt = 0;
   }
@@ -1006,10 +986,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
-            if (self->scene_cnt == 11)
-            {
-              enqueue_log_label (self, self->to_log);
-            }
             switch (self->to)
             {
               case CC_CELL:
@@ -1120,7 +1096,6 @@ scene_handler (CcSecurityFrameworkPanel *self)
             self->scene = SCENE_METHOD_CALL;
             self->from = GAGENT_CELL;
             self->to = GHUB_CELL;
-            self->from_log = g_strdup ("GAGENT: 보안 정책 변경 전달");
             break;
           case SCENE_GHUB_BROADCAST:
             gtk_popover_popdown (GTK_POPOVER (self->popover[CC_CELL]));
@@ -1182,22 +1157,36 @@ get_scene (CcSecurityFrameworkPanel *self)
 {
   gchar **log_str;
   gchar **args;
-  char buf[4096];
+  char buf[DEFAULT_BUF_SIZE];
 
   if (self->scene == SCENE_IDLE) 
   {
-    fgets (buf, 4096, self->fp);
+    self->fp = fopen (self->tailing_file, "r");
+    fseek (self->fp, self->fpos, SEEK_SET);
+    if (fgets (buf, DEFAULT_BUF_SIZE, self->fp) == NULL)
+    {
+      fclose (self->fp);
+      return;
+    }
     log_str = g_strsplit (buf, " ", 0);
     args = g_strsplit (log_str[2], ",", 0);
     self->from = get_cell (args[DMSG_FROM]);
     self->to = get_cell (args[DMSG_TO]);
+    // TODO
+
     self->from_log = g_strconcat (module_name[self->from], "\t-->\t", module_name[self->to], "\t", args[DMSG_GLYPH], " , ", args[DMSG_FUNC], NULL);
 
     if (!g_strcmp0 (args[DMSG_GLYPH], "O") && self->from == GAGENT_CELL && self->to == GHUB_CELL)
     {
       self->scene = SCENE_PRESENTING;
     }
-    else 
+    else if (!g_strcmp0 (args[DMSG_FUNC], "app_status") || !g_strcmp0 (args[DMSG_FUNC], "n/a"))
+    {
+      self->fpos = ftell (self->fp);
+      fclose (self->fp);
+      return;
+    }
+    else
     {
       if (self->from == GHUB_CELL)
       {
@@ -1216,17 +1205,18 @@ get_scene (CcSecurityFrameworkPanel *self)
     {
       g_strfreev (log_str);
     }
+    self->fpos = ftell (self->fp);
+    fclose (self->fp);
   }
 }
 
 static gboolean
-time_handler (GObject *object)
+scene_presenter (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
   if (!self->animating)
   {
-    set_modules_opacity (self);
     get_scene (self);
   }
   scene_handler (self);
@@ -1234,12 +1224,72 @@ time_handler (GObject *object)
   return TRUE;
 }
 
+static void 
+resp_parser (char *resp, char value[][30])
+{
+  int i, j, k, l, m, n;
+  char field[30];
+
+  n = 0;
+  for (i = 0; resp[i] != '\0'; i++)
+  {
+    if (resp[i] == '\"')
+    {
+      k = 0;
+      for (j = i+1; resp[j] != '\"'; j++)
+      {
+        field[k++] = resp[j];
+      }
+      field[k] = '\0';
+      l = j;
+      if (!g_strcmp0 (field, "dbus_name") || !g_strcmp0 (field, "exe_stat"))
+      {
+        m = 0;
+        l += 1;
+        while (resp[l++] != '\"');
+        while (resp[l] != '\"')
+        {
+          value[n][m++] = resp[l++];
+        }
+        value[n][m] = '\0';
+        n++;
+      }
+      i = l;
+    }
+  }
+}
+
 static gboolean
-time_handler2 (GObject *object)
+modules_state_updater (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
+  GThread *thr;
+  char *ret;
+  char value[14][30];
+  int i;
+  int target_cell;
 
-  self->thr = g_thread_new (NULL, get_modules_state, (gpointer) self);
+  thr = g_thread_new (NULL, dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
+  ret = (char *) g_thread_join (thr);
+  resp_parser (ret, value);
+
+  for (i = 0; i < GCTRL_STATUS_RET_NUM*2; i+=2)
+  {
+    target_cell = get_cell (value[i]);
+
+    if (target_cell != -1)
+    {
+      if (!g_strcmp0 (value[i+1], "running"))
+      {
+        self->activated[target_cell] = TRUE;
+      }
+      else
+      {
+        self->activated[target_cell] = FALSE;
+      }
+    }
+  }
+  set_modules_opacity (self);
 
   return TRUE;
 }
@@ -1265,12 +1315,6 @@ cc_security_framework_panel_dispose (GObject *object)
     security_framework_panel->events = 0;
   }
 
-  if (security_framework_panel->fp)
-  {
-    fclose (security_framework_panel->fp);
-    security_framework_panel->fp = NULL;
-  }
-
   G_OBJECT_CLASS (cc_security_framework_panel_parent_class)->dispose (object);
 }
 
@@ -1279,8 +1323,8 @@ cc_security_framework_panel_constructed (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
-  self->event_source_tag[self->events++] = g_timeout_add (100, (GSourceFunc) time_handler, (gpointer) object);
-  //self->event_source_tag[self->events++] = g_timeout_add (1000, (GSourceFunc) time_handler2, (gpointer) object);
+  self->event_source_tag[self->events++] = g_timeout_add (100, (GSourceFunc) scene_presenter, (gpointer) object);
+  self->event_source_tag[self->events++] = g_timeout_add (5000, (GSourceFunc) modules_state_updater, (gpointer) object);
 }
 
 static void
@@ -1335,6 +1379,7 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   PangoAttribute *pg_attr;
   GdkRGBA cover_color;
   GdkRGBA application_layer_color;
+  GDateTime *local_time;
   int r;
 
   g_resources_register (cc_security_framework_get_resource ());
@@ -1345,12 +1390,22 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   lsf_panel_symm_key = g_strdup (app_data.symm_key);
   lsf_panel_access_token = g_strdup (app_data.access_token);
 
+  local_time = g_date_time_new_now_local ();
+  self->tailing_file = g_strconcat ("/var/log/lsf/message-", g_date_time_format (local_time, "%F"), ".log", NULL);
+  g_date_time_unref (local_time);
+
+  self->fp = fopen (self->tailing_file, "r");
+  fseek (self->fp, 0, SEEK_END);
+  self->fpos = ftell (self->fp);
+  fclose (self->fp);
+
   gdk_rgba_parse (&cover_color, "#000000");
   gdk_rgba_parse (&application_layer_color, "rgba(255,0,0,0.5)");
 
-  get_modules_state (self);
+  self->activated[CC_CELL] = TRUE;
+  self->activated[GPMS_CELL] = TRUE;
+  modules_state_updater (self);
 
-  self->fp = fopen ("/var/log/lsf/message-2020-06-04.log", "r");
   self->events = 0;
   self->log_start = 0;
   self->log_end = -1;
@@ -1536,29 +1591,3 @@ cc_security_framework_panel_new (void)
   return g_object_new (CC_TYPE_SECURITY_FRAMEWORK_PANEL,
                        NULL);
 }
-
-/*
-lsf_user_data_t app_data;
-memset (&app_data, 0x00, sizeof (lsf_user_data_t));
-
-r = lsf_auth (&app_data, PASS_PHRASE);
-if (r != LSF_AUTH_STAT_OK) {
-  fprintf (stdout, "auth failed: %d\n", r);
-  return -1;
-}
-
-char *message_fmt = "{\
-                     \"to\": \"%s\",\
-                     \"from\": \"%s\",\
-                     \"access_token\": \"%s\",\
-                     \"function\": \"%s\",\
-                     \"params\": { }}";
-char *req_msg = malloc (4096);
-memset (req_msg, 0, 4096);
-snprintf (req_msg, 4096, message_fmt, "kr.gooroom.ghub", app_data.dbus_name, app_data.access_token, "getsettings");
-
-char *response = NULL;
-lsf_send_message (app_data.symm_key, req_msg, &response);
-fprintf (stdout, "Received response message: \n%s\n", response);
-*/
-

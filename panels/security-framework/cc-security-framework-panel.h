@@ -59,6 +59,8 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define SCENE_CNT                           17
 #define SCENE_END                           -1
 
+#define DEFAULT_BUF_SIZE                  4096
+
 #define REVERSE                              1
 #define LOG_BUF                              8
 #define EVENTS_NUM                          10
@@ -94,6 +96,7 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define PASS_PHRASE               "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
 gchar *lsf_panel_symm_key;
 gchar *lsf_panel_access_token;
+GDBusConnection *lsf_conn;
 
 enum
 {
@@ -173,6 +176,18 @@ enum
   DMSG_ERR,
   DMSG_PAYLOAD,
   DMSG_NUM
+};
+
+enum
+{
+  GCTRL_STATUS_RET_GHUB,
+  GCTRL_STATUS_RET_GAUTH,
+  GCTRL_STATUS_RET_GCTRL,
+  GCTRL_STATUS_RET_TESTAPP,
+  GCTRL_STATUS_RET_AGENT,
+  GCTRL_STATUS_RET_AHNLAB,
+  GCTRL_STATUS_RET_CC,
+  GCTRL_STATUS_RET_NUM
 };
   
 GtkWidget *cc_security_framework_panel_new (void);
