@@ -118,6 +118,9 @@ x11_dep = dependency('x11')
 xi_dep = dependency('xi', version: '>= 1.2')
 gooroom_dep = dependency('webkit2gtk-4.0', version: '>= 2.26.0')
 hancom_dep = dependency('webkit2gtk-4.0', version: '>= 2.26.0')
+custom_dep = dependency('webkit2gtk-4.0', version: '>= 2.26.0')
+lsf_api_dep = dependency('lsf-api')
+lsf_json_dep = dependency('json-c')
 
 m_dep = cc.find_library('m')
 

@@ -38,22 +38,12 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define VT                                  15
 #define HT                                  20 
   
-#define SCENE_GHUB_BROADCAST_GHUB_BLINKING   5
+#define SCENE_GHUB_BROADCAST_GHUB_BLINKING   5 // TODO: DELETE_SCENE
 
 #define SCENE_POLICY_RELOAD_GPMS_BLINKING    5
 #define SCENE_POLICY_RELOAD_GAGENT_BLINKING 15
 
-#define SCENE_GCTRL_KILL_CC_BLINKING         5
-#define SCENE_GCTRL_KILL_GHUB_BLINKING      15
-
-#define SCENE_APP_REQUEST_APP_BLINKING       5
-#define SCENE_APP_REQUEST_GHUB_BLINKING     15
-
-#define SCENE_GAUTH_RESPONSE_GAUTH_BLINKING  5
-#define SCENE_GAUTH_RESPONSE_GHUB_BLINKING  15
-
 #define STARTING_BLINK_CNT                   5
-#define ENDING_BLINK_CNT                    15
 #define MOVING_CNT                           6
 
 #define SCENE_CNT                           17
@@ -62,10 +52,13 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define DEFAULT_BUF_SIZE                  4096
 #define JSON_VALUE_BUF                      30
 
-#define REVERSE                              1
+#define NORM                                 0
+#define REV                                  1
 #define LOG_BUF                              8
 #define EVENTS_NUM                          10
-#define THR_NUM                              4
+#define PRESENTER_TIMEOUT                  100
+#define PRESENTER_TIMEOUT_SLOW             200
+#define UPDATER_TIMEOUT                  1000
 
 #define CC_IMG           "images/control-center-image.svg"
 #define CC_IMG_SMALL     "images/control-center-small-image.png"
@@ -90,6 +83,8 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define GAGENT_DBUS_NAME "kr.gooroom.agent"
 #define APPS_DBUS_NAME   "kr.gooroom.testapp"
 #define GPMS_NAME        "gpms"
+#define LOG_DIRECTORY    "/var/log/lsf/"
+#define LOG_FILE_PREFIX  "message"
 
 #define GPMS_DOMAIN      "https://dev-c4i-gpms.gooroom.kr"
 #define V3_DOMAIN        "http://localhost:88"
@@ -105,11 +100,7 @@ enum
   SCENE_METHOD_CALL_REV,
   SCENE_PRESENTING,
   SCENE_POLICY_RELOAD,
-  SCENE_GHUB_BROADCAST,
-  SCENE_GCTRL_KILL,
-  SCENE_GCTRL_LAUNCH,
-  SCENE_APP_REQUEST,
-  SCENE_GAUTH_RESPONSE,
+  SCENE_GHUB_BROADCAST, // TODO: DELETE_SCENE
   SCENE_NUM
 };
 
@@ -189,6 +180,21 @@ enum
   GCTRL_STATUS_RET_AHNLAB,
   GCTRL_STATUS_RET_CC,
   GCTRL_STATUS_RET_NUM
+};
+
+enum
+{
+  RET_ARG_DBUS_NAME,
+  RET_ARG_EXE_STAT,
+  RET_ARG_AUTH_STAT,
+  RET_ARG_NUM
+};
+
+enum
+{
+  SOURCE_FUNC_PRESENTER,
+  SOURCE_FUNC_UPDATER,
+  SOURCE_FUNC_NUM
 };
   
 GtkWidget *cc_security_framework_panel_new (void);

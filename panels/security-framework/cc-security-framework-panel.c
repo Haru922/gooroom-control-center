@@ -20,11 +20,15 @@
 
 #include <config.h>
 #include <math.h>
+#include <json-c/json_object.h>
+#include <json-c/json_tokener.h>
+#include <json-c/json_object_iterator.h>
 
 #include "cc-security-framework-panel.h"
 #include "cc-security-framework-resources.h"
 
 #define SECURITY_FRAMEWORK_SCHEMA "org.gnome.desktop.security-framework"
+
 
 struct _CcSecurityFrameworkPanel
 {
@@ -73,7 +77,9 @@ struct _CcSecurityFrameworkPanel
   GtkWidget *log_window;
   GtkWidget *log_scrolled_window;
   gboolean   activated[CELL_NUM];
+  gboolean   authorized[CELL_NUM];
   gboolean   animating;
+  gboolean   popover_flag;
   guint      event_source_tag[EVENTS_NUM];
   gchar     *log_message[LOG_BUF];
   gchar     *full_log;
@@ -81,10 +87,11 @@ struct _CcSecurityFrameworkPanel
   gchar     *tailing_file;
   FILE      *fp;
   long       fpos;
-  gint       events;
+  gint       presenter_timeout;
+  gint       updater_timeout;
+  gint       event_cnt;
   gint       scene;
   gint       scene_cnt;
-  gint       target_cell;
   gint       log_start;
   gint       log_end;
   gint       log_cnt;
@@ -94,9 +101,9 @@ struct _CcSecurityFrameworkPanel
 
 G_DEFINE_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC_TYPE_PANEL)
 
-static void do_drawing           (GtkWidget *, cairo_t *, gint, gint, gint, gint);
-static void menu_item_selected   (GtkWidget *, GdkEvent *, gpointer);
-static void set_line_color       (cairo_t *, gint);
+static void do_drawing (GtkWidget *, cairo_t *, gint, gint, gint, gint);
+static gboolean scene_presenter (CcSecurityFrameworkPanel *self);
+static gboolean modules_state_updater (CcSecurityFrameworkPanel *self);
 
 static void
 renew_log_label (CcSecurityFrameworkPanel *self)
@@ -137,6 +144,33 @@ enqueue_log_label (CcSecurityFrameworkPanel *self, char *new_log_message)
 }
 
 static void
+set_line_color (cairo_t *cr,
+                gint     color)
+{
+  switch (color)
+  {
+    case COLOR_BLACK:
+      cairo_set_source_rgba (cr, 0.7, 0.7, 0.7, 1);
+      break;
+    case COLOR_RED:
+      cairo_set_source_rgba (cr, 0.71, 0.06, 0.15, 1);
+      break;
+    case COLOR_GREEN:
+      cairo_set_source_rgba (cr, 0.44, 0.74, 0.12, 1);
+      break;
+    case COLOR_BLUE:
+      cairo_set_source_rgba (cr, 0.05, 0.39, 0.82, 1);
+      break;
+    case COLOR_YELLOW:
+      cairo_set_source_rgba (cr, 0.9, 0.9, 0.1, 1);
+      break;
+    default:
+      cairo_set_source_rgba (cr, 0.64, 0.64, 0.64, 1);
+      break;
+  }
+}
+
+static void
 draw_vertical_bar (GtkWidget *widget,
                    cairo_t   *cr,
                    gpointer   user_data)
@@ -160,7 +194,7 @@ draw_conn_cc_ghub (GtkWidget *widget,
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
   int color;
 
-  if (self->activated[GHUB_CELL])
+  if (self->authorized[CC_CELL])
   {
     color = COLOR_GREEN;
   }
@@ -198,10 +232,10 @@ draw_conn_ghub_gctrl (GtkWidget *widget,
   int color;
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
-  if (self->activated[GHUB_CELL] && self->activated[GCTRL_CELL])
+  if (self->authorized[GCTRL_CELL])
   {
     color = COLOR_GREEN;
-  } 
+  }
   else
   {
     color = COLOR_NONE;
@@ -217,7 +251,7 @@ draw_conn_ghub_gagent (GtkWidget *widget,
   int color;
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
-  if (self->activated[GHUB_CELL] && self->activated[GAGENT_CELL])
+  if (self->authorized[GAGENT_CELL])
   {
     color = COLOR_GREEN;
   }
@@ -236,7 +270,7 @@ draw_conn_ghub_apps (GtkWidget *widget,
   int color;
   CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
 
-  if (self->activated[GHUB_CELL] && self->activated[APPS_CELL])
+  if (self->authorized[APPS_CELL])
   {
     color = COLOR_GREEN;
   }
@@ -366,7 +400,9 @@ static gchar *
 dbus_message_sender (gpointer arg_p)
 {
   int arg = GPOINTER_TO_INT (arg_p);
-  GVariant *ret;
+  lsf_user_data_t app_data;
+  int ret;
+  int r;
   char *func;
   char *param;
   char *message_fmt = "{\
@@ -424,9 +460,27 @@ dbus_message_sender (gpointer arg_p)
       break;
   }
   snprintf (req_msg, DEFAULT_BUF_SIZE, message_fmt, "kr.gooroom.gcontroller", CC_DBUS_NAME, lsf_panel_access_token, func, param);
-  lsf_send_message (lsf_panel_symm_key, req_msg, &response);
-
+  ret = lsf_send_message (lsf_panel_symm_key, req_msg, &response);
   free (req_msg);
+  if (ret == LSF_MESSAGE_SEND_ERROR)
+  {
+    g_print ("LSF_MESSAGE_SEND_ERROR\n");
+    free (response);
+    response = NULL;
+  }
+  if (ret == LSF_MESSAGE_RE_AUTH)
+  {
+    g_print ("LSF_MESSAGE_RE_AUTH\n");
+    r = lsf_auth (&app_data, PASS_PHRASE);
+    if (r == LSF_AUTH_STAT_OK)
+    {
+      lsf_panel_symm_key = g_strdup (app_data.symm_key);
+      lsf_panel_access_token = g_strdup (app_data.access_token);
+      dbus_message_sender (GINT_TO_POINTER (GET_CONFIG));
+    }
+    free (response);
+    response = NULL;
+  }
   return response;
 }
 
@@ -458,6 +512,9 @@ apps_menu_handler (GtkWidget *widget,
 {
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
   GThread *thr;
+  //CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (user_data);
+  CcSecurityFrameworkPanel *self = (CcSecurityFrameworkPanel *) user_data;
+  g_print ("%s\n", self->scene_cnt);
 
   if (!g_strcmp0 (selection, "Kill"))
   {
@@ -476,7 +533,6 @@ gagent_menu_handler (GtkWidget *widget,
 {
   const gchar *selection = gtk_menu_item_get_label (GTK_MENU_ITEM (widget));
   GThread   *thr;
-
   if (!g_strcmp0 (selection, "Kill"))
   {
     thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (KILL_GAGENT));
@@ -484,33 +540,6 @@ gagent_menu_handler (GtkWidget *widget,
   else if (!g_strcmp0 (selection, "Launch"))
   {
     thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (LAUNCH_GAGENT));
-  }
-}
-
-static void
-set_line_color (cairo_t *cr,
-                gint     color)
-{
-  switch (color)
-  {
-    case COLOR_BLACK:
-      cairo_set_source_rgba (cr, 0.7, 0.7, 0.7, 1);
-      break;
-    case COLOR_RED:
-      cairo_set_source_rgba (cr, 0.71, 0.06, 0.15, 1);
-      break;
-    case COLOR_GREEN:
-      cairo_set_source_rgba (cr, 0.44, 0.74, 0.12, 1);
-      break;
-    case COLOR_BLUE:
-      cairo_set_source_rgba (cr, 0.05, 0.39, 0.82, 1);
-      break;
-    case COLOR_YELLOW:
-      cairo_set_source_rgba (cr, 0.9, 0.9, 0.1, 1);
-      break;
-    default:
-      cairo_set_source_rgba (cr, 0.64, 0.64, 0.64, 1);
-      break;
   }
 }
 
@@ -557,13 +586,13 @@ set_menu_items (CcSecurityFrameworkPanel *self,
     g_signal_connect (G_OBJECT (menu_item),
                       "activate",
                       G_CALLBACK (apps_menu_handler),
-                      NULL);
+                      self);
     menu_item = gtk_menu_item_new_with_label ("Kill");
     gtk_menu_attach (GTK_MENU (menu), menu_item, 0, 1, 1, 2);
     g_signal_connect (G_OBJECT (menu_item),
                       "activate",
                       G_CALLBACK (apps_menu_handler),
-                      NULL);
+                      self);
     gtk_widget_show_all (menu);
   }
   else if (module == GAGENT_CELL)
@@ -654,8 +683,8 @@ do_drawing (GtkWidget *widget,
             gint       scene_cnt)
 {
   int i;
-  int reverse = 0;
-  gboolean scope = FALSE;
+  int reverse = NORM;
+  gboolean color_scope = FALSE;
   gboolean vert_bar = FALSE;
   int mid_right[2] = { 78, 35 };
   int mid_left[2] = { 18, 35 };
@@ -681,24 +710,27 @@ do_drawing (GtkWidget *widget,
       if (STARTING_BLINK_CNT < scene_cnt
           && scene_cnt < STARTING_BLINK_CNT+MOVING_CNT)
       {
-        scope = TRUE;
+        color_scope = TRUE;
       }
       break;
     case SCENE_METHOD_CALL_REV:
       if (STARTING_BLINK_CNT < scene_cnt
           && scene_cnt < STARTING_BLINK_CNT+MOVING_CNT)
       {
-        scope = TRUE;
-        reverse = 1;
+        color_scope = TRUE;
+        reverse = REV;
       }
       break;
+      /*
+    // DELETE_SCENE
     case SCENE_GHUB_BROADCAST:
       if (SCENE_GHUB_BROADCAST_GHUB_BLINKING < scene_cnt
           && scene_cnt < SCENE_GHUB_BROADCAST_GHUB_BLINKING+MOVING_CNT)
       {
-        scope = TRUE;
+        color_scope = TRUE;
       }
       break;
+      */
   }
 
   switch (direction)
@@ -721,8 +753,8 @@ do_drawing (GtkWidget *widget,
           if (SCENE_POLICY_RELOAD_GAGENT_BLINKING < scene_cnt
               && scene_cnt < SCENE_POLICY_RELOAD_GAGENT_BLINKING+MOVING_CNT)
           {
-            scope = TRUE;
-            reverse = 1;
+            color_scope = TRUE;
+            reverse = REV;
           }
           break;
       }
@@ -737,7 +769,7 @@ do_drawing (GtkWidget *widget,
           if (SCENE_POLICY_RELOAD_GPMS_BLINKING < scene_cnt
               && scene_cnt < SCENE_POLICY_RELOAD_GPMS_BLINKING+MOVING_CNT)
           {
-            scope = TRUE;
+            color_scope = TRUE;
           }
           break;
       }
@@ -761,7 +793,7 @@ do_drawing (GtkWidget *widget,
   }
   for (i = 0; i < 4; i++)
   {
-    if (scope)
+    if (color_scope)
     {
       if (((scene_cnt+i+reverse)%2))
       {
@@ -797,7 +829,9 @@ scene_handler (CcSecurityFrameworkPanel *self)
   if (self->scene == SCENE_IDLE)
   {
     self->animating = FALSE;
+    self->popover_flag = FALSE;
     self->scene_cnt = 0;
+    draw_lines (self);
   }
   else
   {
@@ -809,13 +843,15 @@ scene_handler (CcSecurityFrameworkPanel *self)
         {
           // TODO: DELETE_START
           case SCENE_PRESENTING:
+            g_source_remove (self->event_source_tag[SOURCE_FUNC_PRESENTER]);
+            self->event_source_tag[SOURCE_FUNC_PRESENTER] = g_timeout_add (PRESENTER_TIMEOUT_SLOW, (GSourceFunc) scene_presenter, (gpointer) self);
             gtk_widget_set_opacity (self->cover_popover, 0.75);
             gtk_image_set_from_file (GTK_IMAGE (self->lsf_image), LSF_IMG);
             gtk_widget_show_all (self->cover_popover);
             gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), "images/sound-wave.gif");
             g_spawn_command_line_async ("/usr/bin/aplay /home/haru/policy-reload.wav", NULL);
             break;
-            // DELETE_END
+            // TODO: DELETE_END
           case SCENE_POLICY_RELOAD:
             gtk_label_set_text (GTK_LABEL (self->message_label[GPMS_CELL]),
                                 "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경</span></b>");
@@ -824,13 +860,23 @@ scene_handler (CcSecurityFrameworkPanel *self)
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
+            if (self->popover_flag)
+            {
+              gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
+                                  "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
+              gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
+              gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
+            }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             gtk_label_set_text (GTK_LABEL (self->message_label[GHUB_CELL]),
                                 "<b><span font='10' font-weight='bold' background='#ffffff' foreground='#6495ed'>보안 정책 변경 전달</span></b>");
             gtk_label_set_use_markup (GTK_LABEL (self->message_label[GHUB_CELL]), TRUE);
             gtk_popover_popup (GTK_POPOVER (self->popover[GHUB_CELL]));
             break;
+            */
         }
         enqueue_log_label (self, self->from_log);
         break;
@@ -867,9 +913,12 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
             }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG);
             break;
+            */
         }
         break;
       case 2: case 4:
@@ -905,9 +954,12 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
             }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG_SMALL);
             break;
+            */
         }
         break;
       case 6: case 7: case 8: case 9: case 10:
@@ -944,6 +996,13 @@ scene_handler (CcSecurityFrameworkPanel *self)
             }
             break;
           case SCENE_METHOD_CALL_REV:
+            if (self->scene_cnt == 6)
+            {
+              if (self->popover_flag)
+              {
+                gtk_popover_popdown (GTK_POPOVER (self->popover[GHUB_CELL]));
+              }
+            }
             switch (self->to)
             {
               case CC_CELL:
@@ -966,6 +1025,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
             }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             if (self->scene_cnt == 6)
             {
@@ -976,6 +1037,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             gtk_widget_queue_draw (self->darea_24);
             gtk_widget_queue_draw (self->darea_14);
             break;
+            */
         }
         break;
       case 11: case 13: case 15:
@@ -1018,6 +1080,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
             }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             if (self->scene_cnt == 11)
             {
@@ -1043,6 +1107,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
             gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
             break;
+            */
         }
         break;
       case 12: case 14:
@@ -1055,6 +1120,8 @@ scene_handler (CcSecurityFrameworkPanel *self)
               gtk_image_clear (GTK_IMAGE (self->lsf_image));
               self->scene = SCENE_POLICY_RELOAD;
               self->scene_cnt = SCENE_END;
+              g_source_remove (self->event_source_tag[SOURCE_FUNC_PRESENTER]);
+              self->event_source_tag[SOURCE_FUNC_PRESENTER] = g_timeout_add (PRESENTER_TIMEOUT, (GSourceFunc) scene_presenter, (gpointer) self);
             }
             break;
           case SCENE_POLICY_RELOAD:
@@ -1087,12 +1154,15 @@ scene_handler (CcSecurityFrameworkPanel *self)
                 break;
             }
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG_SMALL);
             gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG_SMALL);
             gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
             gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
             break;
+            */
         }
         break;
       case 16: 
@@ -1104,12 +1174,15 @@ scene_handler (CcSecurityFrameworkPanel *self)
             self->from = GAGENT_CELL;
             self->to = GHUB_CELL;
             break;
+            // DELETE_SCENE
+            /*
           case SCENE_GHUB_BROADCAST:
             gtk_popover_popdown (GTK_POPOVER (self->popover[CC_CELL]));
             gtk_popover_popdown (GTK_POPOVER (self->popover[GAUTH_CELL]));
             gtk_popover_popdown (GTK_POPOVER (self->popover[GCTRL_CELL]));
             gtk_popover_popdown (GTK_POPOVER (self->popover[APPS_CELL]));
             break;
+            */
           default:
             self->scene = SCENE_IDLE;
             self->animating = FALSE;
@@ -1166,33 +1239,52 @@ get_scene (CcSecurityFrameworkPanel *self)
   gchar **args;
   char buf[DEFAULT_BUF_SIZE];
 
+  self->popover_flag = FALSE;
+
   if (self->scene == SCENE_IDLE) 
   {
-    self->fp = fopen (self->tailing_file, "r");
-    fseek (self->fp, self->fpos, SEEK_SET);
+    if (self->fp == NULL)
+    {
+      self->fp = fopen (self->tailing_file, "r");
+      fseek (self->fp, 0, SEEK_END);
+      self->fpos = ftell (self->fp);
+    }
+    else
+    {
+      fseek (self->fp, self->fpos, SEEK_SET);
+    }
     if (fgets (buf, DEFAULT_BUF_SIZE, self->fp) == NULL)
     {
-      fclose (self->fp);
+      self->scene = SCENE_IDLE;
       return;
     }
     log_str = g_strsplit (buf, " ", 0);
     args = g_strsplit (log_str[2], ",", 0);
     self->from = get_cell (args[DMSG_FROM]);
     self->to = get_cell (args[DMSG_TO]);
-    // TODO
 
+    // TODO: Log Message Format
     self->from_log = g_strconcat (module_name[self->from], "\t-->\t", module_name[self->to], "\t", args[DMSG_GLYPH], " , ", args[DMSG_FUNC], NULL);
 
-    if (!g_strcmp0 (args[DMSG_GLYPH], "O") && self->from == GAGENT_CELL && self->to == GHUB_CELL)
+    if (!g_strcmp0 (args[DMSG_GLYPH], "O"))
     {
-      self->scene = SCENE_PRESENTING;
+      if (self->from == GAGENT_CELL && self->to == GHUB_CELL)
+      {
+        self->scene = SCENE_PRESENTING;
+      }
+      else if (self->from == GHUB_CELL)
+      {
+        self->popover_flag = TRUE;
+        self->scene = SCENE_METHOD_CALL_REV;
+      }
     }
-    else if (!g_strcmp0 (args[DMSG_FUNC], "app_status") || !g_strcmp0 (args[DMSG_FUNC], "n/a"))
+    /*
+    else if (!g_strcmp0 (args[DMSG_FUNC], "app_status") || !g_strcmp0 (args[DMSG_FUNC], "n/a")) // TODO: Method Filtering
     {
       self->fpos = ftell (self->fp);
-      fclose (self->fp);
       return;
     }
+    */
     else
     {
       if (self->from == GHUB_CELL)
@@ -1213,15 +1305,12 @@ get_scene (CcSecurityFrameworkPanel *self)
       g_strfreev (log_str);
     }
     self->fpos = ftell (self->fp);
-    fclose (self->fp);
   }
 }
 
 static gboolean
-scene_presenter (GObject *object)
+scene_presenter (CcSecurityFrameworkPanel *self)
 {
-  CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
-
   if (!self->animating)
   {
     get_scene (self);
@@ -1231,6 +1320,7 @@ scene_presenter (GObject *object)
   return TRUE;
 }
 
+/*
 static void 
 resp_parser (char *resp, char value[][JSON_VALUE_BUF])
 {
@@ -1265,39 +1355,99 @@ resp_parser (char *resp, char value[][JSON_VALUE_BUF])
     }
   }
 }
+*/
+static void
+resp_parser (char *resp,
+             char value[GCTRL_STATUS_RET_NUM][RET_ARG_NUM][JSON_VALUE_BUF])
+{
+  struct json_object *resp_obj;
+  struct json_object *return_obj;
+  struct json_object *result_obj;
+  struct json_object *module_obj;
+  struct json_object *dbus_name_obj;
+  struct json_object *status_obj;
+  struct json_object *status_val;
+  struct json_object *stat_iter;
+  int i;
+
+  resp_obj = json_tokener_parse (resp);
+  if (resp_obj == NULL)
+  {
+    json_object_put (resp_obj);
+    return;
+  }
+  return_obj = json_object_object_get (resp_obj, "return");
+  result_obj = json_object_object_get (return_obj, "result");
+  for (i = 0; i < GCTRL_STATUS_RET_NUM; i++)
+  {
+    module_obj = json_object_array_get_idx (result_obj, i);
+    dbus_name_obj = json_object_object_get (module_obj, "dbus_name");
+    g_strlcpy (value[i][RET_ARG_DBUS_NAME], json_object_get_string (dbus_name_obj), JSON_VALUE_BUF);
+    json_object_put (dbus_name_obj);
+
+    status_obj = json_object_object_get (module_obj, "status");
+    status_val = json_object_array_get_idx (status_obj, 0);
+    stat_iter = json_object_object_get (status_val, "exe_stat");
+    g_strlcpy (value[i][RET_ARG_EXE_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
+    json_object_put (stat_iter);
+
+    if (!g_strcmp0 (value[i][RET_ARG_EXE_STAT], "running"))
+    {
+      stat_iter = json_object_object_get (status_val, "auth_stat");
+      g_strlcpy (value[i][RET_ARG_AUTH_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
+      json_object_put (stat_iter);
+    }
+    else 
+    {
+      g_strlcpy (value[i][RET_ARG_AUTH_STAT], "not_auth", JSON_VALUE_BUF);
+    }
+  }
+  json_object_put (status_val);
+  json_object_put (status_obj);
+  json_object_put (module_obj);
+  json_object_put (result_obj);
+  json_object_put (return_obj);
+  json_object_put (resp_obj);
+}
 
 static gboolean
 modules_state_updater (CcSecurityFrameworkPanel *self)
 {
   GThread *thr;
   char *ret;
-  char value[14][JSON_VALUE_BUF];
-  int i;
+  char value[GCTRL_STATUS_RET_NUM][RET_ARG_NUM][JSON_VALUE_BUF];
+  int i, j;
   int target_cell;
 
   thr = g_thread_new (NULL, (gpointer) dbus_message_sender, GINT_TO_POINTER (GET_STATUS));
   ret = (char *) g_thread_join (thr);
+
   if (ret != NULL)
   {
     resp_parser (ret, value);
-
-    for (i = 0; i < GCTRL_STATUS_RET_NUM*2; i+=2)
+    for (i = 0; i < GCTRL_STATUS_RET_NUM; i++)
     {
-      target_cell = get_cell (value[i]);
-
-      if (target_cell != -1)
+      target_cell = get_cell (value[i][RET_ARG_DBUS_NAME]);
+      if (!g_strcmp0 (value[i][RET_ARG_EXE_STAT], "running"))
       {
-        if (!g_strcmp0 (value[i+1], "running"))
-        {
-          self->activated[target_cell] = TRUE;
-        }
-        else
-        {
-          self->activated[target_cell] = FALSE;
-        }
+        self->activated[target_cell] = TRUE;
+      }
+      else
+      {
+        self->activated[target_cell] = FALSE;
+      }
+
+      if (!g_strcmp0 (value[i][RET_ARG_AUTH_STAT], "auth"))
+      {
+        self->authorized[target_cell] = TRUE;
+      }
+      else
+      {
+        self->authorized[target_cell] = FALSE;
       }
     }
   }
+
   set_modules_opacity (self);
 
   return TRUE;
@@ -1312,16 +1462,22 @@ cc_security_framework_panel_get_help_uri (CcPanel *self)
 static void
 cc_security_framework_panel_dispose (GObject *object)
 {
-  CcSecurityFrameworkPanel *security_framework_panel = CC_SECURITY_FRAMEWORK_PANEL (object);
+  CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
   int i;
 
-  if (security_framework_panel->events)
+  if (self->event_cnt)
   {
-    for (i = 0; i < security_framework_panel->events; i++)
+    for (i = 0; i < self->event_cnt; i++)
     {
-      g_source_remove (security_framework_panel->event_source_tag[i]);
+      g_source_remove (self->event_source_tag[i]);
     }
-    security_framework_panel->events = 0;
+    self->event_cnt = 0;
+  }
+
+  if (self->fp != NULL)
+  {
+    fclose (self->fp);
+    self->fp = NULL;
   }
 
   G_OBJECT_CLASS (cc_security_framework_panel_parent_class)->dispose (object);
@@ -1332,8 +1488,10 @@ cc_security_framework_panel_constructed (GObject *object)
 {
   CcSecurityFrameworkPanel *self = CC_SECURITY_FRAMEWORK_PANEL (object);
 
-  self->event_source_tag[self->events++] = g_timeout_add (100, (GSourceFunc) scene_presenter, (gpointer) object);
-  self->event_source_tag[self->events++] = g_timeout_add (5000, (GSourceFunc) modules_state_updater, (gpointer) object);
+  self->event_source_tag[SOURCE_FUNC_PRESENTER] = g_timeout_add (PRESENTER_TIMEOUT, (GSourceFunc) scene_presenter, (gpointer) self);
+  self->event_cnt++;
+  self->event_source_tag[SOURCE_FUNC_UPDATER] = g_timeout_add (UPDATER_TIMEOUT, (GSourceFunc) modules_state_updater, (gpointer) self);
+  self->event_cnt++;
 }
 
 static void
@@ -1379,6 +1537,28 @@ cc_security_framework_panel_class_init (CcSecurityFrameworkPanelClass *klass)
 }
 
 static void
+panel_value_init (CcSecurityFrameworkPanel *self)
+{
+  GDateTime *local_time;
+
+  self->presenter_timeout = 100;
+  //self->presenter_timeout_slow = 250;
+  self->updater_timeout = 5000;
+  self->fp = NULL;
+  self->activated[CC_CELL] = TRUE;
+  self->activated[GPMS_CELL] = TRUE;
+  self->event_cnt = 0;
+  self->log_start = 0;
+  self->log_end = -1;
+  self->log_cnt = 0;
+  self->scene = SCENE_IDLE;
+  self->full_log = "\tSecurity Framework Panel Launched...\n";
+  local_time = g_date_time_new_now_local ();
+  self->tailing_file = g_strconcat (LOG_DIRECTORY, LOG_FILE_PREFIX, "-", g_date_time_format (local_time, "%F"), ".log", NULL);
+  g_date_time_unref (local_time);
+}
+
+static void
 cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
 {
   lsf_user_data_t app_data;
@@ -1388,12 +1568,12 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   PangoAttribute *pg_attr;
   GdkRGBA cover_color;
   GdkRGBA application_layer_color;
-  GDateTime *local_time;
   int r;
 
   g_resources_register (cc_security_framework_get_resource ());
 
   gtk_widget_init_template (GTK_WIDGET (self));
+  panel_value_init (self);
 
   r = lsf_auth (&app_data, PASS_PHRASE);
   if (r == LSF_AUTH_STAT_OK)
@@ -1403,30 +1583,19 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
     dbus_message_sender (GINT_TO_POINTER (GET_CONFIG));
   }
 
-  local_time = g_date_time_new_now_local ();
-  self->tailing_file = g_strconcat ("/var/log/lsf/message-", g_date_time_format (local_time, "%F"), ".log", NULL);
-  g_date_time_unref (local_time);
-
   self->fp = fopen (self->tailing_file, "r");
-  fseek (self->fp, 0, SEEK_END);
-  self->fpos = ftell (self->fp);
-  fclose (self->fp);
+  if (self->fp != NULL)
+  {
+    fseek (self->fp, 0, SEEK_END);
+    self->fpos = ftell (self->fp);
+  }
 
   gdk_rgba_parse (&cover_color, "#000000");
   gdk_rgba_parse (&application_layer_color, "rgba(255,0,0,0.5)");
 
-  self->activated[CC_CELL] = TRUE;
-  self->activated[GPMS_CELL] = TRUE;
   modules_state_updater (self);
 
-  self->events = 0;
-  self->log_start = 0;
-  self->log_end = -1;
-  self->log_cnt = 0;
-
-  self->scene = SCENE_IDLE;
   draw_lines (self);
-  self->target_cell = GAGENT_CELL;
 
   event_box = gtk_event_box_new ();
   gtk_event_box_set_above_child (GTK_EVENT_BOX (event_box), FALSE);
@@ -1570,6 +1739,7 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gtk_label_set_attributes (GTK_LABEL (self->cover_label), pg_attr_list);
   gtk_widget_set_margin_top (self->cover_label, 130);
 
+  // TODO: Message
   self->cover_sub_label = gtk_label_new ("시나리오를 시작합니다.");
   pg_attr_list = pango_attr_list_new ();
   pg_attr = pango_attr_foreground_new (65535, 65535, 65535);
@@ -1595,7 +1765,7 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gtk_popover_set_modal (GTK_POPOVER (self->cover_popover), FALSE);
 
   gtk_widget_show_all (self->module_info_box);
-  // DELETE_END
+  // TODO: DELETE_END
 }
 
 GtkWidget *

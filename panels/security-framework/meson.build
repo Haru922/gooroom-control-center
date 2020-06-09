@@ -38,7 +38,8 @@ sources = files(
 
 deps = common_deps + [
   libxml_dep,
-  lsf_api_dep
+  lsf_api_dep,
+  lsf_json_dep
 ]
 
 cflags += [
