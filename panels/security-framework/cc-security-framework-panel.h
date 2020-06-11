@@ -38,13 +38,12 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define VT                                  15
 #define HT                                  20 
   
-#define SCENE_GHUB_BROADCAST_GHUB_BLINKING   5 // TODO: DELETE_SCENE
-
 #define SCENE_POLICY_RELOAD_GPMS_BLINKING    5
 #define SCENE_POLICY_RELOAD_GAGENT_BLINKING 15
 
 #define STARTING_BLINK_CNT                   5
 #define MOVING_CNT                           6
+#define KEY_EXCHANGE_FIN                     3
 
 #define SCENE_CNT                           17
 #define SCENE_END                           -1
@@ -56,9 +55,10 @@ G_DECLARE_FINAL_TYPE (CcSecurityFrameworkPanel, cc_security_framework_panel, CC,
 #define REV                                  1
 #define LOG_BUF                              8
 #define EVENTS_NUM                          10
-#define PRESENTER_TIMEOUT                  100
+#define PRESENTER_TIMEOUT                   50 
 #define PRESENTER_TIMEOUT_SLOW             200
-#define UPDATER_TIMEOUT                  1000
+#define MINUTE                           60000
+#define UPDATER_TIMEOUT                1*MINUTE
 
 #define CC_IMG           "images/control-center-image.svg"
 #define CC_IMG_SMALL     "images/control-center-small-image.png"
@@ -100,7 +100,6 @@ enum
   SCENE_METHOD_CALL_REV,
   SCENE_PRESENTING,
   SCENE_POLICY_RELOAD,
-  SCENE_GHUB_BROADCAST, // TODO: DELETE_SCENE
   SCENE_NUM
 };
 
@@ -117,7 +116,7 @@ enum
 };
 
 char *module_name[CELL_NUM] = { "CC", "GHUB", "GAUTH",
-                                "GCTRL", "GAGENT", "APPS",
+                                "GCTRL", "GAGENT", "V3",
                                 "GPMS" };
 
 enum
