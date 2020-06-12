@@ -59,9 +59,11 @@ extern GType cc_sound_panel_get_type (void);
 extern GType cc_font_panel_get_type (void);
 extern GType cc_themes_panel_get_type (void);
 extern GType cc_security_framework_panel_get_type (void);
+/*
 extern GType cc_gooroom_panel_get_type (void);
 extern GType cc_hancom_panel_get_type (void);
 extern GType cc_custom_panel_get_type (void);
+*/
 #ifdef BUILD_THUNDERBOLT
 extern GType cc_bolt_panel_get_type (void);
 #endif /* BUILD_THUNDERBOLT */
@@ -98,9 +100,11 @@ static struct {
 #ifdef BUILD_BLUETOOTH
   PANEL_TYPE("bluetooth",          cc_bluetooth_panel_get_type,            NULL),
 #endif
+  /*
   PANEL_TYPE("custom",             cc_custom_panel_get_type,               NULL),
   PANEL_TYPE("hancom",             cc_hancom_panel_get_type,               NULL),
   PANEL_TYPE("gooroom",            cc_gooroom_panel_get_type,              NULL),
+  */
   PANEL_TYPE("security-framework", cc_security_framework_panel_get_type,   NULL),
   PANEL_TYPE("font",               cc_font_panel_get_type,                 NULL),
   PANEL_TYPE("themes",             cc_themes_panel_get_type,               NULL),

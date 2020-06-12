@@ -2,11 +2,24 @@
 <gresources>
   <gresource prefix="/org/gnome/control-center/security-framework">
     <file preprocess="xml-stripblanks">security-framework.ui</file>
-    <file>images/control-center-image.svg</file>
-    <file>images/ghub-image.svg</file>
-    <file>images/gcontroller-image.svg</file>
-    <file>images/gauth-image.svg</file>
-    <file>images/apps-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/control-center-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/control-center-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/ghub-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/ghub-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/gcontroller-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/gcontroller-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/gauth-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/gauth-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/apps-image.png</file>
+    <file preprocess="xml-stripblanks">resources/apps-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/gagent-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/gagent-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/gpms-image.svg</file>
+    <file preprocess="xml-stripblanks">resources/gpms-small-image.png</file>
+    <file preprocess="xml-stripblanks">resources/sound-wave.gif</file>
+    <file preprocess="xml-stripblanks">resources/sound-idle.png</file>
+    <file preprocess="xml-stripblanks">resources/lsf.png</file>
+    <file preprocess="xml-stripblanks">resources/policy-reload.wav</file>
   </gresource>
 </gresources>
 

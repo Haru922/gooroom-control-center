@@ -21,6 +21,24 @@ datadir = get_option('datadir')
 
 resource_data = files(
   'security-framework.ui',
+  'resources/control-center-image.svg',
+  'resources/control-center-small-image.png',
+  'resources/ghub-image.svg',
+  'resources/ghub-small-image.png',
+  'resources/gcontroller-image.svg',
+  'resources/gcontroller-small-image.png',
+  'resources/gauth-image.svg',
+  'resources/gauth-small-image.png',
+  'resources/apps-image.png',
+  'resources/apps-small-image.png',
+  'resources/gagent-image.svg',
+  'resources/gagent-small-image.png',
+  'resources/gpms-image.svg',
+  'resources/gpms-small-image.png',
+  'resources/sound-wave.gif',
+  'resources/sound-idle.png',
+  'resources/lsf.png',
+  'resources/policy-reload.wav'
 )
 
 common_sources = []
@@ -50,7 +68,7 @@ cflags += [
 sources += common_sources + files('cc-security-framework-panel.c')
 panels_libs += static_library(
   cappletname,
-  sources: sources,
+  sources: sources + resources,
   include_directories: [ top_inc, common_inc ],
   dependencies: deps,
   c_args: cflags

@@ -5,35 +5,25 @@
     <property name="visible">True</property>
     <property name="can-focus">False</property>
     <child>
-      <?object class="GtkImage" id="gauth_image">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="pixbuf">images/gauth-image.svg</property>
-      </object>
-      <object class="GtkImage" id="ghub_image">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="pixbuf">images/ghub-image.svg</property>
-      </object?>
       <object class="GtkImage" id="gcontroller_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">images/gcontroller-image.svg</property>
+        <property name="resource">/org/gnome/control-center/security-framework/resources/gcontroller-image.svg</property>
       </object>
       <object class="GtkImage" id="apps_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">images/apps-image.png</property>
+        <property name="resource">/org/gnome/control-center/security-framework/resources/apps-image.png</property>
       </object>
       <object class="GtkImage" id="gagent_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">images/gagent-image.svg</property>
+        <property name="resource">/org/gnome/control-center/security-framework/resources/gagent-image.svg</property>
       </object>
       <object class="GtkImage" id="gpms_image">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="pixbuf">images/gpms-image.svg</property>
+        <property name="resource">/org/gnome/control-center/security-framework/resources/gpms-image.svg</property>
       </object>
       <object class="GtkBox" id="main_box">
         <property name="visible">True</property>
@@ -48,39 +38,6 @@
             <property name="column_homogeneous">True</property>
             <property name="halign">center</property>
             <property name="valign">center</property>
-            <property name="margin_top">75</property>
-            <?child>
-              <object class="GtkButton" id="ghub_button">
-                <property name="label" translatable="yes">GHub</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">ghub_image</property>
-                <property name="relief">none</property>
-                <property name="image_position">top</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="gauth_button">
-                <property name="label" translatable="yes">GAuth</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">gauth_image</property>
-                <property name="relief">none</property>
-                <property name="image_position">top</property>
-                <property name="always_show_image">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">1</property>
-              </packing>
-            </child?>
             <child>
               <object class="GtkButton" id="gcontroller_button">
                 <property name="label" translatable="yes">GController</property>
@@ -154,7 +111,7 @@
                   <object class="GtkImage" id="control_center_image">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">images/control-center-image.svg</property>
+                    <property name="resource">/org/gnome/control-center/security-framework/resources/control-center-image.svg</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -189,7 +146,7 @@
                   <object class="GtkImage" id="ghub_image">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">images/ghub-image.svg</property>
+                    <property name="resource">/org/gnome/control-center/security-framework/resources/ghub-image.svg</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -224,7 +181,7 @@
                   <object class="GtkImage" id="gauth_image">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">images/gauth-image.svg</property>
+                    <property name="resource">/org/gnome/control-center/security-framework/resources/gauth-image.svg</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -250,41 +207,6 @@
                 <property name="top_attach">1</property>
               </packing>
             </child>
-            <?child>
-              <object class="GtkBox" id="gpms_section">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="orientation">vertical</property>
-                <child>
-                  <object class="GtkImage" id="gpms_image">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="pixbuf">images/gpms-image.svg</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">False</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="gpms_label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">GPMS</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">6</property>
-                <property name="top_attach">3</property>
-              </packing>
-            </child?>
             <child>
               <object class="GtkDrawingArea" id="darea_10">
                 <property name="visible">True</property>

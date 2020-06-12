@@ -20,7 +20,11 @@ panels = [
   'universal-access',
   'user-accounts',
   'font',
-  'themes'
+  'themes',
+  'security-framework',
+#  'gooroom',
+#  'hancom',
+#  'custom'
 ]
 
 if host_is_linux

@@ -875,10 +875,10 @@ scene_handler (CcSecurityFrameworkPanel *self)
             g_source_remove (self->event_source_tag[SOURCE_FUNC_PRESENTER]);
             self->event_source_tag[SOURCE_FUNC_PRESENTER] = g_timeout_add (PRESENTER_TIMEOUT_SLOW, (GSourceFunc) scene_presenter, (gpointer) self);
             gtk_widget_set_opacity (self->cover_popover, 0.75);
-            gtk_image_set_from_file (GTK_IMAGE (self->lsf_image), LSF_IMG);
+            gtk_image_set_from_resource (GTK_IMAGE (self->lsf_image), LSF_IMG);
             gtk_widget_show_all (self->cover_popover);
-            gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), "images/sound-wave.gif");
-            g_spawn_command_line_async ("/usr/bin/aplay /home/haru/policy-reload.wav", NULL);
+            gtk_image_set_from_resource (GTK_IMAGE (self->sound_wave), SOUND_WAVE_GIF);
+            g_spawn_command_line_async ("/usr/bin/aplay /home/user/policy-reload.wav", NULL);
             break;
             // TODO: DELETE_END
           case SCENE_POLICY_RELOAD:
@@ -917,32 +917,32 @@ scene_handler (CcSecurityFrameworkPanel *self)
         switch (self->scene)
         {
           case SCENE_POLICY_RELOAD:
-            gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG);
+            gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG);
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
             switch (self->from)
             {
               case CC_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->control_center_image), CC_IMG);
                 break;
               case GHUB_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->ghub_image), GHUB_IMG);
                 break;
               case GAUTH_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gauth_image), GAUTH_IMG);
                 break;
               case GCTRL_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
                 break;
               case GAGENT_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
                 break;
               case APPS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->apps_image), APPS_IMG);
                 break;
               case GPMS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG);
                 break;
             }
             break;
@@ -956,7 +956,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             {
               gtk_popover_popdown (GTK_POPOVER (self->popover[GPMS_CELL]));
             }
-            gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
+            gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
@@ -970,25 +970,25 @@ scene_handler (CcSecurityFrameworkPanel *self)
             switch (self->from)
             {
               case CC_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->control_center_image), CC_IMG_SMALL);
                 break;
               case GHUB_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->ghub_image), GHUB_IMG_SMALL);
                 break;
               case GAUTH_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gauth_image), GAUTH_IMG_SMALL);
                 break;
               case GCTRL_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
                 break;
               case GAGENT_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
                 break;
               case APPS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
                 break;
               case GPMS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
                 break;
             }
             break;
@@ -1060,32 +1060,32 @@ scene_handler (CcSecurityFrameworkPanel *self)
               gtk_label_set_use_markup (GTK_LABEL (self->message_label[GAGENT_CELL]), TRUE);
               gtk_popover_popup (GTK_POPOVER (self->popover[GAGENT_CELL]));
             }
-            gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
+            gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
             switch (self->to)
             {
               case CC_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->control_center_image), CC_IMG);
                 break;
               case GHUB_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->ghub_image), GHUB_IMG);
                 break;
               case GAUTH_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gauth_image), GAUTH_IMG);
                 break;
               case GCTRL_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG);
                 break;
               case GAGENT_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG);
                 break;
               case APPS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->apps_image), APPS_IMG);
                 break;
               case GPMS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG);
                 break;
             }
             break;
@@ -1095,32 +1095,32 @@ scene_handler (CcSecurityFrameworkPanel *self)
         switch (self->scene)
         {
           case SCENE_POLICY_RELOAD:
-            gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
+            gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
             break;
           case SCENE_METHOD_CALL:
           case SCENE_METHOD_CALL_REV:
             switch (self->to)
             {
               case CC_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->control_center_image), CC_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->control_center_image), CC_IMG_SMALL);
                 break;
               case GHUB_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->ghub_image), GHUB_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->ghub_image), GHUB_IMG_SMALL);
                 break;
               case GAUTH_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gauth_image), GAUTH_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gauth_image), GAUTH_IMG_SMALL);
                 break;
               case GCTRL_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gcontroller_image), GCTRL_IMG_SMALL);
                 break;
               case GAGENT_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gagent_image), GAGENT_IMG_SMALL);
                 break;
               case APPS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->apps_image), APPS_IMG_SMALL);
                 break;
               case GPMS_CELL:
-                gtk_image_set_from_file (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
+                gtk_image_set_from_resource (GTK_IMAGE (self->gpms_image), GPMS_IMG_SMALL);
                 break;
             }
             break;
@@ -1203,8 +1203,15 @@ get_scene (CcSecurityFrameworkPanel *self)
     if (self->fp == NULL)
     {
       self->fp = fopen (self->tailing_file, "r");
-      fseek (self->fp, 0, SEEK_END);
-      self->fpos = ftell (self->fp);
+      if (self->fp != NULL)
+      {
+        fseek (self->fp, 0, SEEK_END);
+        self->fpos = ftell (self->fp);
+      }
+      else
+      {
+        return;
+      }
     }
     else
     {
@@ -1682,7 +1689,7 @@ cc_security_framework_panel_init (CcSecurityFrameworkPanel *self)
   gtk_widget_set_margin_top (self->cover_sub_label, 20);
 
   self->sound_wave = gtk_image_new ();
-  gtk_image_set_from_file (GTK_IMAGE (self->sound_wave), SOUND_WAVE_GIF);
+  gtk_image_set_from_resource (GTK_IMAGE (self->sound_wave), SOUND_WAVE_GIF);
   gtk_widget_set_margin_top (self->sound_wave, 70);
 
   self->cover_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
