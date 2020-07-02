@@ -878,7 +878,7 @@ scene_handler (CcSecurityFrameworkPanel *self)
             gtk_image_set_from_resource (GTK_IMAGE (self->lsf_image), LSF_IMG);
             gtk_widget_show_all (self->cover_popover);
             gtk_image_set_from_resource (GTK_IMAGE (self->sound_wave), SOUND_WAVE_GIF);
-            g_spawn_command_line_async ("/usr/bin/aplay /home/user/policy-reload.wav", NULL);
+            g_spawn_command_line_async ("/usr/bin/aplay /var/tmp/lsf/policy-reload.wav", NULL);
             break;
             // TODO: DELETE_END
           case SCENE_POLICY_RELOAD:
