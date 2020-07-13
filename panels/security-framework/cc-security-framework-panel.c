@@ -1283,40 +1283,48 @@ static int
 resp_parser (char *resp,
              char value[GCTRL_STATUS_RET_NUM][RET_ARG_NUM][JSON_VALUE_BUF])
 {
-  struct json_object *resp_obj;
-  struct json_object *module_obj;
-  struct json_object *field_iter;
-  struct json_object *stat_iter;
-  int i;
+  struct json_object *resp_obj = NULL;
+  struct json_object *module_obj = NULL;
+  struct json_object *field_iter = NULL;
+  struct json_object *stat_iter = NULL;
+  int i, j;
+  int module_len;
 
   resp_obj = json_tokener_parse (resp);
-  if (resp_obj == NULL)
-  {
-    json_object_put (resp_obj);
-    return -1;
-  }
-
-  resp_obj = json_object_object_get (resp_obj, "return");
-  resp_obj = json_object_object_get (resp_obj, "result");
-  for (i = 0; i < GCTRL_STATUS_RET_NUM; i++)
+  
+  if (!resp_obj) goto RESP_PARSER_ERROR;
+  if (!json_object_object_get_ex (resp_obj, "return", &resp_obj)) goto RESP_PARSER_ERROR;
+  if (!json_object_object_get_ex (resp_obj, "result", &resp_obj)) goto RESP_PARSER_ERROR;
+  module_len = json_object_array_length (resp_obj);
+  if (module_len <= 0) goto RESP_PARSER_ERROR;
+  for (i = 0; i < module_len; i++)
   {
     module_obj = json_object_array_get_idx (resp_obj, i);
-    field_iter = json_object_object_get (module_obj, "dbus_name");
-    g_strlcpy (value[i][RET_ARG_DBUS_NAME], json_object_get_string (field_iter), JSON_VALUE_BUF);
+    if (!module_obj) goto RESP_PARSER_ERROR;
+    if (!json_object_object_get_ex (module_obj, "dbus_name", &field_iter)) goto RESP_PARSER_ERROR;
 
-    field_iter = json_object_object_get (module_obj, "status");
-    field_iter = json_object_array_get_idx (field_iter, 0);
-    stat_iter = json_object_object_get (field_iter, "exe_stat");
-    g_strlcpy (value[i][RET_ARG_EXE_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
-
-    if (!g_strcmp0 (value[i][RET_ARG_EXE_STAT], "running"))
+    j = get_cell (json_object_get_string (field_iter));
+    if (j < 0)
     {
-      stat_iter = json_object_object_get (field_iter, "auth_stat");
-      g_strlcpy (value[i][RET_ARG_AUTH_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
+      continue;
+    }
+      
+    g_strlcpy (value[j][RET_ARG_DBUS_NAME], json_object_get_string (field_iter), JSON_VALUE_BUF);
+
+    if (!json_object_object_get_ex (module_obj, "status", &field_iter)) goto RESP_PARSER_ERROR;
+    field_iter = json_object_array_get_idx (field_iter, 0);
+    if (!field_iter) goto RESP_PARSER_ERROR;
+    if (!json_object_object_get_ex (field_iter, "exe_stat", &stat_iter)) goto RESP_PARSER_ERROR;
+    g_strlcpy (value[j][RET_ARG_EXE_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
+
+    if (!g_strcmp0 (value[j][RET_ARG_EXE_STAT], "running"))
+    {
+      if (!json_object_object_get_ex (field_iter, "auth_stat", &stat_iter)) goto RESP_PARSER_ERROR;
+      g_strlcpy (value[j][RET_ARG_AUTH_STAT], json_object_get_string (stat_iter), JSON_VALUE_BUF);
     }
     else 
     {
-      g_strlcpy (value[i][RET_ARG_AUTH_STAT], "not_auth", JSON_VALUE_BUF);
+      g_strlcpy (value[j][RET_ARG_AUTH_STAT], "not_auth", JSON_VALUE_BUF);
     }
     json_object_put (field_iter);
     json_object_put (module_obj);
@@ -1324,6 +1332,13 @@ resp_parser (char *resp,
   json_object_put (resp_obj);
 
   return 0;
+
+RESP_PARSER_ERROR:
+  if (resp_obj) json_object_put (resp_obj);
+  if (field_iter) json_object_put (field_iter);
+  if (module_obj) json_object_put (module_obj);
+
+  return -1;
 }
 
 static gboolean
