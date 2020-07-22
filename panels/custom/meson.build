@@ -21,6 +21,8 @@ datadir = get_option('datadir')
 
 resource_data = files(
   'custom.ui',
+  'resources/html/custom.html',
+  'resources/js/lsf.js'
 )
 
 common_sources = []

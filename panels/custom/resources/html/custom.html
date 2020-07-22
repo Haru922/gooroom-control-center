@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8", http-equiv="Content-Type">
+    <style>
+    .custom_button {
+      background-color: #D3D3D3;
+      border: none;
+      color: black;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    </style>
+    <title>Gooroom</title>
+  </head>
+  <body bgcolor="#000"; text="#0F0">
+    <div align="center">
+      <h1>보안 앱 설정</h1>
+      <p>testapp 설정</p>
+    </div><br>
+    <div align="center">
+      <button class="custom_button" id="apply_button" onclick="apply_settings()">새로운 설정 적용</button>
+      <button class="custom_button" id="reload_button" onclick="reload_settings()">현재 설정 보기</button>
+    </div><br>
+    <div align="center">
+      <input type="checkbox" id="auto_execute">
+      <label for="check_box">auto execute</label>
+    </div>
+    <div align="center">
+      <input type="checkbox" id="restart_onfailure">
+      <label for="check_box">restart onfailure</label>
+    </div><br>
+    <div align="center">
+      <label for="ip_address">IP address:</label>
+      <input type="text" id="ip_address">
+    </div>
+    <div align="center">
+      <label for="port_number">port number:</label>
+      <input type="text" id="port_number">
+    </div><br>
+    <div align="center">
+      <p>request interval:</p>
+      <input type="radio" id="request_interval_1" name="request_interval" value=1>
+      <label for="request_interval_1">1 min</label>
+      <input type="radio" id="request_interval_2" name="request_interval" value=3>
+      <label for="request_interval_2">3 min</label>
+      <input type="radio" id="request_interval_3" name="request_interval" value=5>
+      <label for="request_interval_3">5 min</label>
+      <input type="radio" id="request_interval_4" name="request_interval" value=7>
+      <label for="request_interval_4">7 min</label>
+      <input type="radio" id="request_interval_5" name="request_interval" value=9>
+      <label for="request_interval_5">9 min</label>
+    </div><br>
+    <div align="center">
+      <label for="permission_user">Permission User:</label>
+      <input type="text" id="permission_user">
+    </div>
+    <div align="center">
+      <label for="log_directory">Log Directory:</label>
+      <input type="text" id="log_directory">
+    </div>
+    <script src="/org/gnome/control-center/custom/resources/lsf.js"></script>
+    <script>
+
+      function updateElements() {
+        let app_conf = lsf_get_settings();
+        document.getElementById('auto_execute').checked = app_conf['auto_execute'];
+        document.getElementById('ip_address').value = app_conf['ip_address'];
+        document.getElementById('port_number').value = app_conf['port_number'].toString();
+        document.getElementById('restart_onfailure').checked = app_conf['restart_onfailure'];
+        switch (app_conf['request_interval']) {
+          case 1: document.getElementById('request_interval_1').checked = true; break;
+          case 3: document.getElementById('request_interval_2').checked = true; break;
+          case 5: document.getElementById('request_interval_3').checked = true; break;
+          case 7: document.getElementById('request_interval_4').checked = true; break;
+          case 9: document.getElementById('request_interval_5').checked = true; break;
+        }
+        document.getElementById('permission_user').value = app_conf['permission_user'];
+        document.getElementById('log_directory').value = app_conf['log_directory'];
+      }
+
+      function apply_settings() {
+        let app_conf = { auto_execute: document.getElementById('auto_execute').checked,
+                         ip_address: document.getElementById('ip_address').value,
+                         port_number: parseInt(document.getElementById('port_number').value),
+                         restart_onfailure: document.getElementById('restart_onfailure').checked,
+                         request_interval: parseInt(document.querySelector('input[name=request_interval]:checked').value),
+                         permission_user: document.getElementById('permission_user').value,
+                         log_directory: document.getElementById('log_directory').value };
+        lsf_set_settings(app_conf);
+      }
+
+      function reload_settings() {
+        lsf_get_settings();
+        updateElements();
+      }
+
+      window.addEventListener('load', () => reload_settings());
+
+    </script>
+  </body>
+</html>
