@@ -37,7 +37,6 @@ G_DECLARE_FINAL_TYPE (CcCustomPanel, cc_custom_panel, CC, CUSTOM_PANEL, CcPanel)
 #define CC_DBUS_NAME     "kr.gooroom.controlcenter"
 #define APP_DBUS_NAME    "kr.gooroom.testapp"
 
-#define PASS_PHRASE      "n6x6myibEAvfN9vIDDPQi+iCoE7yTuHP//eC195+g7w="
 #define SET_SETTINGS_FMT "{ \"to\": \"%s\", \"from\": \"%s\", \"access_token\": \"%s\", \"function\": \"%s\", \"app_conf\": %s }"
 #define GET_SETTINGS_FMT "{ \"to\": \"%s\", \"from\": \"%s\", \"access_token\": \"%s\", \"function\": \"%s\" }"
 

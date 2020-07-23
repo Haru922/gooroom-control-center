@@ -1,0 +1,67 @@
+body, h1, button {
+    margin: 0;
+    padding: 0;
+    border: 0;   
+}
+
+.main-container {
+    width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid lightgrey;
+    color: #333333;
+}
+
+#main {
+    margin-top: 30px;
+}
+
+.box {  
+    height: 80px;
+    margin: 10px 0;
+    padding: 0 10px;    
+}
+
+.box.btn-contents {   
+    line-height: 80px;
+}
+.btn-contents button {
+    width: 49%;
+    height: 40px;   
+    background-color: #1b6ed0;
+    color: #ffffff;
+    line-height: 40px;
+    border-radius: 4px;
+}
+
+.box.checkbox-contents {
+    height: 40px;
+    line-height: 40px;
+}
+
+.box.radio-contents {
+    background: #e5e5e5;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+.box-title {
+    font-size: 20px;
+}
+.box-contents {
+    margin-top: 16px;
+}
+
+.input-contents div {
+    margin: 10px 0;
+    font-weight: bold;
+}
+.input-contents div label {
+    width: 150px;
+    display: inline-block;
+    font-size: 14px;
+}
+
+input[type="text"] {
+    width: calc(100% - 172px);
+    height: 21px;
+}

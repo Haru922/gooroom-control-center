@@ -63,8 +63,8 @@ lsf_msg_handler (WebKitUserContentManager *manager,
   struct json_object *resp_obj;
   struct json_object *prop_obj;
   lsf_user_data_t app_data;
-  const char *param;
-  const char *func;
+  const char *app_settings;
+  const char *method;
   CcCustomPanel *self = (CcCustomPanel *) user_data;
   JSCValue *val = webkit_javascript_result_get_js_value (js_result);
   char *req_msg = (char *) calloc (1, JSON_FILE_BUF_SIZE);
@@ -72,56 +72,55 @@ lsf_msg_handler (WebKitUserContentManager *manager,
   char script[JSON_FILE_BUF_SIZE] = { 0, };
   int ret;
 
-  fprintf (stdout, "** from web view: %s **\n", jsc_value_to_string (val)); // TODO DELETE: Debugging Message.
+  fprintf (stdout, "\n** from web view: %s **\n", jsc_value_to_string (val)); // TODO DELETE: Debugging Message.
 
   req_obj = json_tokener_parse (jsc_value_to_string (val));
   if (!req_obj)
     return;
 
   json_object_object_get_ex (req_obj, "method", &prop_obj);
-  func = json_object_get_string (prop_obj);
+  method = json_object_get_string (prop_obj);
 
-  if (strcmp (func, "set_settings") == 0)
+  if (strcmp (method, "lsf_set_settings") == 0)
   {
     json_object_object_get_ex (req_obj, "app_conf", &prop_obj);
-    param = json_object_get_string (prop_obj);
+    app_settings = json_object_get_string (prop_obj);
     snprintf (req_msg, JSON_FILE_BUF_SIZE, SET_SETTINGS_FMT,
               APP_DBUS_NAME, CC_DBUS_NAME,
-              lsf_panel_access_token, func, param);
+              lsf_panel_access_token, method, app_settings);
     ret = lsf_send_message (lsf_panel_symm_key, req_msg, &response);
   }
-  else if (strcmp (func, "get_settings") == 0)
+  else if (strcmp (method, "lsf_get_settings") == 0)
   {
     snprintf (req_msg, JSON_FILE_BUF_SIZE, GET_SETTINGS_FMT,
               APP_DBUS_NAME, CC_DBUS_NAME,
-              lsf_panel_access_token, func);
+              lsf_panel_access_token, method);
     ret = lsf_send_message (lsf_panel_symm_key, req_msg, &response);
-    if (ret == LSF_MESSAGE_RE_AUTH)
+  }
+  json_object_put (req_obj);
+  FREE (req_msg);
+
+  if (ret == LSF_MESSAGE_RE_AUTH)
+  {
+    ret = lsf_auth (&app_data, g_settings_get_string (self->custom_settings, "passphrase"));
+    if (ret == LSF_AUTH_STAT_OK)
     {
-      ret = lsf_auth (&app_data, PASS_PHRASE);
-      if (ret == LSF_AUTH_STAT_OK)
-      {
-        lsf_panel_symm_key = g_strdup (app_data.symm_key);
-        lsf_panel_access_token = g_strdup (app_data.access_token);
-      }
-    }
-    else if (ret == LSF_MESSAGE_RESP_OK)
-    {
-      resp_obj = json_tokener_parse (response);
-      fprintf (stdout, "-- from testapp: %s --\n", response); // TODO DELETE: Debugging Message.
-      snprintf(script, JSON_FILE_BUF_SIZE,
-               "localStorage.setItem('lsf_msg', '%s')",
-               json_object_get_string (resp_obj));
-      webkit_web_view_run_javascript (WEBKIT_WEB_VIEW (self->custom_web_view),
-                                      script, NULL, NULL, NULL);
-      json_object_put (resp_obj);
+      lsf_panel_symm_key = g_strdup (app_data.symm_key);
+      lsf_panel_access_token = g_strdup (app_data.access_token);
     }
   }
-  fprintf (stdout, "++ request message: %s ++\n", req_msg); // TODO DELETE: Debugging Message.
-
+  else if (ret == LSF_MESSAGE_RESP_OK)
+  {
+    fprintf (stdout, "\n-- from testapp: %s --\n", response); // TODO DELETE: Debugging Message.
+    resp_obj = json_tokener_parse (response);
+    snprintf(script, JSON_FILE_BUF_SIZE,
+             "localStorage.setItem('lsfMsg', '%s')",
+             json_object_get_string (resp_obj));
+    webkit_web_view_run_javascript (WEBKIT_WEB_VIEW (self->custom_web_view),
+                                    script, NULL, NULL, NULL);
+    json_object_put (resp_obj);
+  }
   FREE (response);
-  FREE (req_msg);
-  json_object_put (req_obj);
 }
 
 static void
@@ -129,37 +128,36 @@ cc_custom_panel_constructed (GObject *object)
 {
   CcCustomPanel *self = CC_CUSTOM_PANEL (object);
   WebKitUserContentManager *manager = webkit_user_content_manager_new ();
-  WebKitUserScript *script;
+  WebKitUserScript *lsf_api;
   struct stat st;
-  char *lsf_api = NULL;
-  FILE *fp = fopen ("/var/tmp/lsf/js/lsf.js", "r");
+  char *script = NULL;
+  FILE *fp = NULL;
 
-  if (g_resource_load ("/org/gnome/control-center/custom/resources/js/lsf.js", NULL))
-    g_print ("loaded\n");
-
+  fp = fopen (g_settings_get_string (self->custom_settings, "lsf-js"), "r");
   if (fp) 
   {
     fstat (fileno (fp), &st);
-    lsf_api = (char *) calloc (1, st.st_size + 1);
-    fread (lsf_api, st.st_size, 1, fp);
-    lsf_api[st.st_size] = '\0';
+    script = (char *) calloc (1, st.st_size + 1);
+    fread (script, st.st_size, 1, fp);
+    script[st.st_size] = '\0';
     fclose (fp);
   }
 
-  self->custom_settings = g_settings_new (CUSTOM_SCHEMA);
-  g_signal_connect (manager, "script-message-received::lsf_interface",
+  g_signal_connect (manager, "script-message-received::lsfInterface",
                     G_CALLBACK (lsf_msg_handler), self);
-  webkit_user_content_manager_register_script_message_handler (manager, "lsf_interface");
+  webkit_user_content_manager_register_script_message_handler (manager, "lsfInterface");
 
-  if (lsf_api) 
+  if (script) 
   {
-    script = webkit_user_script_new (lsf_api, 0, 0, NULL, NULL);
-    webkit_user_content_manager_add_script (manager, script);
-    FREE (lsf_api);
+    lsf_api = webkit_user_script_new (script, 0, 0, NULL, NULL);
+    webkit_user_content_manager_add_script (manager, lsf_api);
+    FREE (script);
   }
+
   self->custom_web_view = webkit_web_view_new_with_user_content_manager (manager);
   webkit_web_view_load_uri (WEBKIT_WEB_VIEW (self->custom_web_view),
                             g_settings_get_string (self->custom_settings, "custom-html"));
+
   gtk_container_add (GTK_CONTAINER (self->custom_scrolled_window), self->custom_web_view);
   gtk_widget_show (self->custom_web_view);
 }
@@ -183,10 +181,11 @@ cc_custom_panel_init (CcCustomPanel *self)
   lsf_user_data_t app_data;
   int ret;
   g_resources_register (cc_custom_get_resource ());
+  self->custom_settings = g_settings_new (CUSTOM_SCHEMA);
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
-  ret = lsf_auth (&app_data, PASS_PHRASE);
+  ret = lsf_auth (&app_data, g_settings_get_string (self->custom_settings, "passphrase"));
   if (ret == LSF_AUTH_STAT_OK)
   {
     lsf_panel_symm_key = g_strdup (app_data.symm_key);
