@@ -373,11 +373,14 @@ static const gchar * const panel_order[] = {
   "reset-settings",
 
   /* Security page */
-  // TODO
+  // TODO: DELETE commented items
   "security-framework",
   "gooroom",
   "hancom",
-  "custom"
+  "custom",
+  "app-configuration",
+  "lsftest",
+  "security-apps"
 };
 
 static guint

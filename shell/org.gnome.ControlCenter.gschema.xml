@@ -16,7 +16,7 @@
       </description>
     </key>
     <key name="whitelist-panels" type="as">
-      <default>['bluetooth', 'background', 'search', 'region', 'universal-access', 'font', 'online-accounts', 'privacy', 'sharing', 'sound', 'power', 'network', 'wifi', 'wacom', 'display', 'keyboard', 'printers', 'mouse', 'removable-media', 'thunderbolt', 'color', 'info-overview', 'datetime', 'user-accounts', 'default-apps', 'themes', 'security-framework', 'gooroom', 'hancom', 'custom']</default>
+      <default>['bluetooth', 'background', 'search', 'region', 'universal-access', 'font', 'online-accounts', 'privacy', 'sharing', 'sound', 'power', 'network', 'wifi', 'wacom', 'display', 'keyboard', 'printers', 'mouse', 'removable-media', 'thunderbolt', 'color', 'info-overview', 'datetime', 'user-accounts', 'default-apps', 'themes', 'security-framework', 'gooroom', 'hancom', 'custom', 'lsftest', 'app-configuration', 'security-apps']</default>
       <summary>Show settings list</summary>
       <description>Show side panel list that matches the User settings values.</description>
     </key>
